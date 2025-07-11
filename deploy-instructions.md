@@ -2,7 +2,7 @@
 
 ## Quick Deploy Options
 
-### 🚀 Vercel (Recommended - 5 minutes)
+### 🚀 Vercel (Recommended - 5 minutes
 
 1. **Prepare Supabase:**
    - Create account at [supabase.com](https://supabase.com)
