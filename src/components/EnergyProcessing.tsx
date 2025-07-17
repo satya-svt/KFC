@@ -232,7 +232,7 @@ export default function EnergyProcessing() {
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
 
-            <p className="text-gray-300 mb-6">Energy & processing data has been submitted.</p>
+            <p className="text-gray-300 mb-6">Energy & processing data has been submitted</p>
             <div className="space-y-4">
               <motion.button
                 onClick={() => navigate('/waste')}

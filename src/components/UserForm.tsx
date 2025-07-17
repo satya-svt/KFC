@@ -215,8 +215,8 @@ export default function UserForm() {
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Thank You!</h2>
-            <p className="text-gray-300 mb-6">Your response has been successfully submitted.</p>
+
+            <p className="text-gray-300 mb-6">Feed has been submitted</p>
             {/* --- UPDATED THIS SECTION --- */}
             <div className="space-y-4">
               <motion.button
