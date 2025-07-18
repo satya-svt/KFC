@@ -667,7 +667,7 @@ export default function EnergyProcessing() {
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Submit Energy & Processing Data</span>
+                <span>Next</span>
               </>
             )}
           </motion.button>
