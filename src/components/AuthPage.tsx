@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <-- THIS LINE IS FIXED
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -181,7 +181,8 @@ export default function AuthPage() {
           )}
 
           <motion.div
-            className="cursor-pointer inline-flex items-center justify-center gap-3"
+            // --- THIS IS THE ONLY CHANGE ---
+            className="cursor-pointer inline-flex items-center justify-center gap-4" // Changed gap-3 to gap-4
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
