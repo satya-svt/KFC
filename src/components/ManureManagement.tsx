@@ -353,7 +353,7 @@ export default function ManureManagement() {
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Submit Manure Management Data</span>
+                <span>Next</span>
               </>
             )}
           </motion.button>
