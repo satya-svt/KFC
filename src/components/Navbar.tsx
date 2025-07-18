@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../lib/supabase'
+import React, { useState } from 'react';
+// FIX: Restoring original imports for routing and Supabase.
+// Make sure you have 'react-router-dom' installed and a supabase client configured.
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase'; // Make sure this path is correct for your project.
+
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Wheat,
   Recycle,
@@ -12,7 +15,7 @@ import {
   Settings,
   Menu,
   X
-} from 'lucide-react'
+} from 'lucide-react';
 
 const navigationItems = [
   { path: '/form', label: 'FEED', icon: Wheat, color: 'text-green-400', hoverColor: 'hover:text-green-300' },
@@ -20,40 +23,44 @@ const navigationItems = [
   { path: '/energy', label: 'Energy', icon: Zap, color: 'text-blue-400', hoverColor: 'hover:text-blue-300' },
   { path: '/waste', label: 'Waste', icon: Droplets, color: 'text-cyan-400', hoverColor: 'hover:text-cyan-300' },
   { path: '/transport', label: 'Transport', icon: Truck, color: 'text-purple-400', hoverColor: 'hover:text-purple-300' }
-]
+];
 
 export default function Navbar() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [showAdminAccess, setShowAdminAccess] = useState(false)
-  const [clickCount, setClickCount] = useState(0)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  // FIX: Using the actual hooks from react-router-dom instead of the mock functions.
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [showAdminAccess, setShowAdminAccess] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Don't show navbar on auth and admin pages
   if (location.pathname === '/auth' || location.pathname === '/admin') {
-    return null
+    return null;
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    navigate('/auth')
-  }
+    // FIX: Using the imported supabase client directly.
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
 
   const handleLogoClick = () => {
-    setClickCount(prev => prev + 1)
+    setClickCount(prev => prev + 1);
     if (clickCount >= 4) {
-      setShowAdminAccess(true)
+      setShowAdminAccess(true);
       setTimeout(() => {
-        setShowAdminAccess(false)
-        setClickCount(0)
-      }, 10000)
+        setShowAdminAccess(false);
+        setClickCount(0);
+      }, 10000);
     }
-    setTimeout(() => setClickCount(0), 3000)
-  }
+    setTimeout(() => setClickCount(0), 3000);
+  };
 
-  const isActivePage = (path: string) => location.pathname === path
+  const isActivePage = (path) => location.pathname === path;
 
   return (
+    // The main nav container has its original full-width style.
     <motion.nav
       className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10"
       initial={{ y: -100, opacity: 0 }}
@@ -69,7 +76,7 @@ export default function Navbar() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <motion.h1 
+            <motion.h1
               className="text-xl font-bold text-white"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -79,21 +86,20 @@ export default function Navbar() {
             </motion.h1>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          {/* Desktop Navigation - Wrapped in the box */}
+          <div className="hidden md:flex items-center space-x-1 bg-black/20 border border-white/10 rounded-xl p-1">
             {navigationItems.map((item, index) => {
-              const Icon = item.icon
-              const isActive = isActivePage(item.path)
-              
+              const Icon = item.icon;
+              const isActive = isActivePage(item.path);
+
               return (
                 <motion.button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-white/20 text-white shadow-lg' 
-                      : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
-                  }`}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${isActive
+                    ? 'bg-white/20 text-white shadow-lg'
+                    : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
+                    }`}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: -20 }}
@@ -102,9 +108,8 @@ export default function Navbar() {
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-white' : item.color}`} />
                   <span className="font-medium">{item.label}</span>
-                  {/* Removed white dot/indicator */}
                 </motion.button>
-              )
+              );
             })}
           </div>
 
@@ -166,21 +171,20 @@ export default function Navbar() {
             >
               <div className="px-2 pt-2 pb-3 space-y-1">
                 {navigationItems.map((item, index) => {
-                  const Icon = item.icon
-                  const isActive = isActivePage(item.path)
-                  
+                  const Icon = item.icon;
+                  const isActive = isActivePage(item.path);
+
                   return (
                     <motion.button
                       key={item.path}
                       onClick={() => {
-                        navigate(item.path)
-                        setIsMobileMenuOpen(false)
+                        navigate(item.path);
+                        setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center space-x-3 w-full px-3 py-3 rounded-lg transition-all duration-300 ${
-                        isActive 
-                          ? 'bg-white/20 text-white' 
-                          : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
-                      }`}
+                      className={`flex items-center space-x-3 w-full px-3 py-3 rounded-lg transition-all duration-300 ${isActive
+                        ? 'bg-white/20 text-white'
+                        : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
+                        }`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * index }}
@@ -190,15 +194,15 @@ export default function Navbar() {
                       <Icon className={`w-5 h-5 ${isActive ? 'text-white' : item.color}`} />
                       <span className="font-medium">{item.label}</span>
                     </motion.button>
-                  )
+                  );
                 })}
-                
+
                 {/* Mobile Admin Access */}
                 {showAdminAccess && (
                   <motion.button
                     onClick={() => {
-                      navigate('/admin')
-                      setIsMobileMenuOpen(false)
+                      navigate('/admin');
+                      setIsMobileMenuOpen(false);
                     }}
                     className="flex items-center space-x-3 w-full px-3 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-300 hover:text-gray-200 transition-all duration-300"
                     initial={{ opacity: 0, x: -20 }}
@@ -230,5 +234,5 @@ export default function Navbar() {
         </AnimatePresence>
       </div>
     </motion.nav>
-  )
+  );
 }
