@@ -35,7 +35,7 @@ function getFlattenedResponses(allData: Record<string, any>) {
     waste: "Waste",
     transport: "Transport"
   }
-  
+
   Object.entries(allData).forEach(([section, data]) => {
     if (!Array.isArray(data)) return
     data.forEach((row: any, idx: number) => {
@@ -53,7 +53,7 @@ function getFlattenedResponses(allData: Record<string, any>) {
 function downloadAsPDFFromData(allData: Record<string, any>) {
   const doc = new jsPDF()
   const responseRows = getFlattenedResponses(allData)
-  
+
   if (responseRows.length === 0) {
     alert("No data to download.")
     return
@@ -62,38 +62,38 @@ function downloadAsPDFFromData(allData: Record<string, any>) {
   // Add title and user info
   doc.setFontSize(20)
   doc.text('Submission Export', 14, 22)
-  
+
   doc.setFontSize(12)
   doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35)
   doc.text(`Total Entries: ${responseRows.length}`, 14, 45)
-  
+
   // Build table with all data
   const columns = Object.keys(responseRows[0])
   const tableData = responseRows.map(row => columns.map(col => row[col] ?? ""))
-  
+
   autoTable(doc, {
     head: [columns],
     body: tableData,
     startY: 55,
     margin: { left: 14, right: 14 },
-    styles: { 
+    styles: {
       fontSize: 8,
       cellPadding: 3
     },
-    headStyles: { 
+    headStyles: {
       fillColor: [66, 66, 66],
       textColor: [255, 255, 255],
       fontSize: 9
     },
-    alternateRowStyles: { 
-      fillColor: [245, 245, 245] 
+    alternateRowStyles: {
+      fillColor: [245, 245, 245]
     },
     columnStyles: {
       0: { cellWidth: 20 }, // Section column
       1: { cellWidth: 15 }   // Entry column
     }
   })
-  
+
   doc.save('submission.pdf')
 }
 
@@ -156,7 +156,7 @@ export default function ReviewDownload() {
         const data = await getAllAutoSavedData(entryId)
         const email = await getCurrentUserEmail()
         const profile = getUserProfile()
-        
+
         setAllData(data)
         setUserInfo({ email, profile })
       } catch (error) {
@@ -196,7 +196,7 @@ export default function ReviewDownload() {
 
   const formatDataForDisplay = (data: any[], type: string) => {
     if (!data || !Array.isArray(data)) return []
-    
+
     switch (type) {
       case 'feed':
         return data.map((item, index) => ({
@@ -240,42 +240,42 @@ export default function ReviewDownload() {
   }
 
   const sections = [
-    { 
-      key: 'feed', 
-      title: 'FEED Data', 
-      icon: Wheat, 
+    {
+      key: 'feed',
+      title: 'FEED Data',
+      icon: Wheat,
       color: 'text-green-400',
       data: formatDataForDisplay(allData.feed, 'feed'),
       headers: ['Entry', 'Feed Type', 'Quantity', 'Unit']
     },
-    { 
-      key: 'manure', 
-      title: 'Manure Management', 
-      icon: Recycle, 
+    {
+      key: 'manure',
+      title: 'Manure Management',
+      icon: Recycle,
       color: 'text-yellow-400',
       data: formatDataForDisplay(allData.manure, 'manure'),
       headers: ['Entry', 'System Type', 'Days Used']
     },
-    { 
-      key: 'energy', 
-      title: 'Energy & Processing', 
-      icon: Zap, 
+    {
+      key: 'energy',
+      title: 'Energy & Processing',
+      icon: Zap,
       color: 'text-blue-400',
       data: formatDataForDisplay(allData.energy, 'energy'),
       headers: ['Entry', 'Facility', 'Energy Type', 'Unit', 'Consumption']
     },
-    { 
-      key: 'waste', 
-      title: 'Waste Management', 
-      icon: Droplets, 
+    {
+      key: 'waste',
+      title: 'Waste Management',
+      icon: Droplets,
       color: 'text-cyan-400',
       data: formatDataForDisplay(allData.waste, 'waste'),
       headers: ['Entry', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type']
     },
-    { 
-      key: 'transport', 
-      title: 'Transport', 
-      icon: Truck, 
+    {
+      key: 'transport',
+      title: 'Transport',
+      icon: Truck,
       color: 'text-purple-400',
       data: formatDataForDisplay(allData.transport, 'transport'),
       headers: ['Entry', 'Route', 'Vehicle Type', 'Distance']
@@ -333,10 +333,7 @@ export default function ReviewDownload() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center space-x-3">
                   <User className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <p className="text-gray-400 text-sm">User Email</p>
-                    <p className="text-white font-medium">{userInfo.email || 'N/A'}</p>
-                  </div>
+
                 </div>
                 <div className="flex items-center space-x-3">
                   <Building2 className="w-5 h-5 text-green-400" />
@@ -499,7 +496,7 @@ export default function ReviewDownload() {
                       <h3 className="text-xl font-semibold text-white">{section.title}</h3>
                       <span className="text-sm text-gray-400">({section.data.length} entries)</span>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
