@@ -14,15 +14,18 @@ import {
   LogOut,
   Settings,
   Menu,
-  X
+  X,
+  FileText // Added new icon for the review button
 } from 'lucide-react';
 
+// Added the new "Review" button to the navigation items array
 const navigationItems = [
   { path: '/form', label: 'FEED', icon: Wheat, color: 'text-green-400', hoverColor: 'hover:text-green-300' },
   { path: '/manure', label: 'Manure', icon: Recycle, color: 'text-yellow-400', hoverColor: 'hover:text-yellow-300' },
   { path: '/energy', label: 'Energy', icon: Zap, color: 'text-blue-400', hoverColor: 'hover:text-blue-300' },
   { path: '/waste', label: 'Waste', icon: Droplets, color: 'text-cyan-400', hoverColor: 'hover:text-cyan-300' },
-  { path: '/transport', label: 'Transport', icon: Truck, color: 'text-purple-400', hoverColor: 'hover:text-purple-300' }
+  { path: '/transport', label: 'Transport', icon: Truck, color: 'text-purple-400', hoverColor: 'hover:text-purple-300' },
+  { path: '/review', label: 'Review', icon: FileText, color: 'text-teal-400', hoverColor: 'hover:text-teal-300' }
 ];
 
 export default function Navbar() {
