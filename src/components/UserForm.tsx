@@ -470,7 +470,7 @@ export default function UserForm() {
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Submit Feed Data</span>
+                <span>Next</span>
               </>
             )}
           </motion.button>
