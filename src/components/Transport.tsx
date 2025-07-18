@@ -444,7 +444,7 @@ export default function Transport() {
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Submit Transport Data</span>
+                <span>Next</span>
               </>
             )}
           </motion.button>
