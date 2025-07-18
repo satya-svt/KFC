@@ -508,7 +508,7 @@ export default function WasteManagement() {
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Submit Waste Management Data</span>
+                <span>Next</span>
               </>
             )}
           </motion.button>
