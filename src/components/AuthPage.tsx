@@ -180,20 +180,31 @@ export default function AuthPage() {
             </motion.button>
           )}
 
-          <motion.div
-            // --- THIS IS THE ONLY CHANGE ---
-            className="cursor-pointer inline-flex items-center justify-center gap-4" // Changed gap-3 to gap-4
-            onClick={() => navigate('/')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.h1 className="text-3xl font-bold text-white">
+          {/* --- THIS IS THE FIX --- */}
+          {/* A new container to separate the heading from the icon */}
+          <div className="flex w-full justify-between items-center">
+            {/* An empty div to balance the flexbox */}
+            <div className="w-7"></div>
+
+            <motion.h1
+              className="text-3xl font-bold text-white"
+              onClick={handleLogoClick}
+            >
               {authMode === 'login' ? 'Welcome Back' :
                 authMode === 'signup' ? 'Create Account' :
                   'Reset Password'}
             </motion.h1>
-            <Home className="w-7 h-7 text-gray-400" />
-          </motion.div>
+
+            <motion.button
+              className="text-gray-400 hover:text-white transition-colors"
+              onClick={() => navigate('/')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Go to Home Page"
+            >
+              <Home className="w-7 h-7" />
+            </motion.button>
+          </div>
 
           <motion.p className="text-gray-300 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
