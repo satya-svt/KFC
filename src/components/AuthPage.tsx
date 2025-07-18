@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '../lib/supabase'
+import React, { useState, useEffect } from 'react'; // <-- THIS LINE IS FIXED
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 import {
   Mail,
   Lock,
@@ -15,19 +15,22 @@ import {
   Settings,
   User,
   Building2,
-} from 'lucide-react'
+  Home
+} from 'lucide-react';
 
-type AuthMode = 'login' | 'signup' | 'forgot'
+type AuthMode = 'login' | 'signup' | 'forgot';
 
 export default function AuthPage() {
-  const navigate = useNavigate()
-  const [authMode, setAuthMode] = useState<AuthMode>('login')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
-  const [showAdminAccess, setShowAdminAccess] = useState(false)
-  const [clickCount, setClickCount] = useState(0)
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
+  const [showAdminAccess, setShowAdminAccess] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
 
   const [formData, setFormData] = useState({
     emailOrUsername: '',
@@ -35,56 +38,58 @@ export default function AuthPage() {
     confirmPassword: '',
     username: '',
     organizationName: ''
-  })
+  });
 
   const validateUsername = (username: string): boolean => {
-    const usernameRegex = /^[a-zA-Z0-9]{3,20}$/
-    return usernameRegex.test(username)
-  }
+    const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
+    return usernameRegex.test(username);
+  };
 
   const validateOrganizationName = (orgName: string): boolean => {
-    if (!orgName) return true
-    return orgName.trim().length >= 2 && orgName.trim().length <= 100
-  }
+    if (!orgName) return true;
+    return orgName.trim().length >= 2 && orgName.trim().length <= 100;
+  };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        navigate('/form')
-      }
+    const searchParams = new URLSearchParams(location.search);
+    const mode = searchParams.get('mode');
+
+    if (mode === 'signup') {
+      setAuthMode('signup');
     }
 
-    checkAuth()
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/form');
+      }
+    };
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate('/form')
+        navigate('/form');
       }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [navigate])
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate, location.search]);
 
   const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage('')
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
 
     try {
       if (authMode === 'signup') {
         if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match')
+          throw new Error('Passwords do not match');
         }
-
         if (!validateUsername(formData.username)) {
-          throw new Error('Username must be 3-20 alphanumeric characters only')
+          throw new Error('Username must be 3-20 alphanumeric characters only');
         }
-
         if (!validateOrganizationName(formData.organizationName)) {
-          throw new Error('Organization name must be 2-100 characters')
+          throw new Error('Organization name must be 2-100 characters');
         }
-
         const { error } = await supabase.auth.signUp({
           email: formData.emailOrUsername,
           password: formData.password,
@@ -94,76 +99,64 @@ export default function AuthPage() {
               organization_name: formData.organizationName || null
             }
           }
-        })
-
-        if (error) throw error
-
+        });
+        if (error) throw error;
         localStorage.setItem('pendingUserProfile', JSON.stringify({
           username: formData.username,
           organization_name: formData.organizationName || null,
           email: formData.emailOrUsername
-        }))
-
-        setMessage('Check your email for verification link!')
-        setMessageType('success')
-
+        }));
+        setMessage('Check your email for verification link!');
+        setMessageType('success');
       } else if (authMode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.emailOrUsername,
           password: formData.password
-        })
-
-        if (error) throw error
-
-        navigate('/form')
-
+        });
+        if (error) throw error;
+        navigate('/form');
       } else if (authMode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(formData.emailOrUsername, {
           redirectTo: `${window.location.origin}/reset-password`
-        })
-
-        if (error) throw error
-
-        setMessage('Password reset email sent!')
-        setMessageType('success')
+        });
+        if (error) throw error;
+        setMessage('Password reset email sent!');
+        setMessageType('success');
       }
-
     } catch (error) {
-      let errorMessage = 'An error occurred'
-
+      let errorMessage = 'An error occurred';
       if (error instanceof Error) {
         if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
-          setAuthMode('login')
-          errorMessage = 'This email is already registered. Please sign in with your existing account.'
+          setAuthMode('login');
+          errorMessage = 'This email is already registered. Please sign in with your existing account.';
         } else if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password.'
+          errorMessage = 'Invalid email or password.';
         } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please confirm your email before signing in.'
+          errorMessage = 'Please confirm your email before signing in.';
         } else if (error.message.includes('Too many requests')) {
-          errorMessage = 'Too many login attempts. Please wait.'
+          errorMessage = 'Too many login attempts. Please wait.';
         } else {
-          errorMessage = error.message
+          errorMessage = error.message;
         }
       }
-
-      setMessage(errorMessage)
-      setMessageType('error')
+      setMessage(errorMessage);
+      setMessageType('error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleLogoClick = () => {
-    setClickCount(prev => prev + 1)
+    setClickCount(prev => prev + 1);
     if (clickCount >= 4) {
-      setShowAdminAccess(true)
+      setShowAdminAccess(true);
       setTimeout(() => {
-        setShowAdminAccess(false)
-        setClickCount(0)
-      }, 10000)
+        setShowAdminAccess(false);
+        setClickCount(0);
+      }, 10000);
     }
-    setTimeout(() => setClickCount(0), 3000)
-  }
+    setTimeout(() => setClickCount(0), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
@@ -188,19 +181,20 @@ export default function AuthPage() {
           )}
 
           <motion.div
-            className="cursor-pointer inline-block"
-            onClick={handleLogoClick}
+            className="cursor-pointer inline-flex items-center justify-center gap-3"
+            onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <motion.h1 className="text-3xl font-bold mb-2 text-white">
+            <motion.h1 className="text-3xl font-bold text-white">
               {authMode === 'login' ? 'Welcome Back' :
                 authMode === 'signup' ? 'Create Account' :
                   'Reset Password'}
             </motion.h1>
+            <Home className="w-7 h-7 text-gray-400" />
           </motion.div>
 
-          <motion.p className="text-gray-300 text-lg font-medium">
+          <motion.p className="text-gray-300 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
             {authMode === 'signup' && 'Join our data platform'}
             {authMode === 'forgot' && 'Enter your email to reset password'}
@@ -231,10 +225,9 @@ export default function AuthPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={`flex items-center space-x-2 p-4 rounded-lg mb-6 ${
-              messageType === 'success'
-                ? 'text-green-300 bg-green-900/30 border border-green-500/30'
-                : 'text-red-300 bg-red-900/30 border border-red-500/30'
+            className={`flex items-center space-x-2 p-4 rounded-lg mb-6 ${messageType === 'success'
+              ? 'text-green-300 bg-green-900/30 border border-green-500/30'
+              : 'text-red-300 bg-red-900/30 border border-red-500/30'
               }`}
           >
             {messageType === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
@@ -243,7 +236,6 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-6">
-          {/* Email Input */}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -355,5 +347,5 @@ export default function AuthPage() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }
