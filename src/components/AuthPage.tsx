@@ -15,10 +15,31 @@ import {
   Settings,
   User,
   Building2,
-  Home
+  Home,
+  // --- MERGED: Added new icons for the form ---
+  MapPin,
+  Globe,
+  ChevronDown
 } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup' | 'forgot';
+
+// --- MERGED: Added constants for the new dropdowns ---
+const organizationOptions = [
+  'org1', 'org2', 'org3', 'org4', 'org5', 'org6', 'org7', 'org8', 'org9', 'org10',
+  'org11', 'org12', 'org13', 'org14', 'org15', 'org16', 'org17', 'org18', 'org19', 'org20',
+  'org21', 'org22', 'org23', 'org24', 'org25', 'org26', 'org27', 'org28', 'org29', 'org30'
+];
+
+const indianStates = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+];
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -32,28 +53,20 @@ export default function AuthPage() {
   const [showAdminAccess, setShowAdminAccess] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
+  // --- MERGED: Updated formData state for the new fields ---
   const [formData, setFormData] = useState({
     emailOrUsername: '',
     password: '',
     confirmPassword: '',
-    username: '',
-    organizationName: ''
+    organizationName: '',
+    state: '',
+    country: ''
   });
 
-  const validateUsername = (username: string): boolean => {
-    const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
-    return usernameRegex.test(username);
-  };
-
-  const validateOrganizationName = (orgName: string): boolean => {
-    if (!orgName) return true;
-    return orgName.trim().length >= 2 && orgName.trim().length <= 100;
-  };
-
   useEffect(() => {
+    // Kept your existing useEffect, as it correctly handles mode and redirects
     const searchParams = new URLSearchParams(location.search);
     const mode = searchParams.get('mode');
-
     if (mode === 'signup') {
       setAuthMode('signup');
     }
@@ -64,6 +77,7 @@ export default function AuthPage() {
         navigate('/form');
       }
     };
+
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -71,9 +85,11 @@ export default function AuthPage() {
         navigate('/form');
       }
     });
+
     return () => subscription.unsubscribe();
   }, [navigate, location.search]);
 
+  // --- MERGED: Updated handleAuth function with new sign-up logic ---
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -84,30 +100,34 @@ export default function AuthPage() {
         if (formData.password !== formData.confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        if (!validateUsername(formData.username)) {
-          throw new Error('Username must be 3-20 alphanumeric characters only');
+        if (!formData.organizationName || !formData.state || !formData.country) {
+          throw new Error('Please fill out all required fields.');
         }
-        if (!validateOrganizationName(formData.organizationName)) {
-          throw new Error('Organization name must be 2-100 characters');
-        }
+
         const { error } = await supabase.auth.signUp({
           email: formData.emailOrUsername,
           password: formData.password,
           options: {
             data: {
-              username: formData.username,
-              organization_name: formData.organizationName || null
+              organization_name: formData.organizationName,
+              state: formData.state,
+              country: formData.country,
             }
           }
         });
+
         if (error) throw error;
+
         localStorage.setItem('pendingUserProfile', JSON.stringify({
-          username: formData.username,
-          organization_name: formData.organizationName || null,
+          organization_name: formData.organizationName,
+          state: formData.state,
+          country: formData.country,
           email: formData.emailOrUsername
         }));
+
         setMessage('Check your email for verification link!');
         setMessageType('success');
+
       } else if (authMode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.emailOrUsername,
@@ -168,24 +188,8 @@ export default function AuthPage() {
         className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 shadow-2xl"
       >
         <div className="text-center mb-8">
-          {(authMode === 'signup' || authMode === 'forgot') && (
-            <motion.button
-              onClick={() => setAuthMode('login')}
-              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg mb-6 flex items-center space-x-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Welcome</span>
-            </motion.button>
-          )}
-
-          {/* --- THIS IS THE FIX --- */}
-          {/* A new container to separate the heading from the icon */}
           <div className="flex w-full justify-between items-center">
-            {/* An empty div to balance the flexbox */}
             <div className="w-7"></div>
-
             <motion.h1
               className="text-3xl font-bold text-white"
               onClick={handleLogoClick}
@@ -194,7 +198,6 @@ export default function AuthPage() {
                 authMode === 'signup' ? 'Create Account' :
                   'Reset Password'}
             </motion.h1>
-
             <motion.button
               className="text-gray-400 hover:text-white transition-colors"
               onClick={() => navigate('/')}
@@ -213,30 +216,8 @@ export default function AuthPage() {
           </motion.p>
         </div>
 
-        <AnimatePresence>
-          {showAdminAccess && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              className="mb-6"
-            >
-              <Link
-                to="/admin"
-                className="w-full bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-300 py-2 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Admin Dashboard</span>
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {message && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
             className={`flex items-center space-x-2 p-4 rounded-lg mb-6 ${messageType === 'success'
               ? 'text-green-300 bg-green-900/30 border border-green-500/30'
               : 'text-red-300 bg-red-900/30 border border-red-500/30'
@@ -248,18 +229,44 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-6">
+          {/* --- MERGED: Replaced the old sign-up form with the new one --- */}
+          {authMode === 'signup' && (
+            <>
+              {/* Organization Name Dropdown */}
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select
+                  value={formData.organizationName}
+                  onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                  required
+                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                >
+                  <option value="" disabled className="bg-gray-800 text-gray-300">Select Organization</option>
+                  {organizationOptions.map(org => (
+                    <option key={org} value={org} className="bg-gray-800 text-white">
+                      {org}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              </div>
+            </>
+          )}
+
+          {/* Email Input */}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="email"
               value={formData.emailOrUsername}
               onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
-              placeholder="Enter your email or username"
+              placeholder="Enter your email"
               required
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
             />
           </div>
 
+          {/* Password Input */}
           {authMode !== 'forgot' && (
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -281,32 +288,51 @@ export default function AuthPage() {
             </div>
           )}
 
+          {/* New Signup Fields */}
           {authMode === 'signup' && (
             <>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Confirm Password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
-              />
-              <input
-                type="text"
-                placeholder="Username"
-                required
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
-              />
+              {/* Confirm Password */}
               <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm Password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                />
+              </div>
+
+              {/* State Dropdown */}
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  required
+                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                >
+                  <option value="" disabled className="bg-gray-800 text-gray-300">Select State</option>
+                  {indianStates.map(state => (
+                    <option key={state} value={state} className="bg-gray-800 text-white">
+                      {state}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              </div>
+
+              {/* Country Input */}
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Organization Name"
-                  value={formData.organizationName}
-                  onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+                  placeholder="Country"
+                  required
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                 />
               </div>
             </>
