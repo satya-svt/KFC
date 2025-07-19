@@ -5,7 +5,13 @@ import { User, UserPlus } from 'lucide-react';
 const Header: React.FC<{ shouldGlow: boolean }> = ({ shouldGlow }) => {
     const navigate = useNavigate();
 
-    const buttonClasses = `flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 border border-white/20 ${shouldGlow ? 'animate-glow' : ''}`;
+    // --- 1. REMOVED the 'animate-glow' class from here ---
+    const buttonClasses = `flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-300 border border-white/20`;
+
+    // --- 2. CREATED a style object to force the animation to run 4 times ---
+    const glowStyle = {
+        animation: 'glow 1s ease-in-out 4'
+    };
 
     return (
         <header className="absolute top-0 left-0 right-0 z-50 p-6">
@@ -18,14 +24,20 @@ const Header: React.FC<{ shouldGlow: boolean }> = ({ shouldGlow }) => {
                     </h1>
                 </div>
                 <div className="flex gap-4">
-                    {/* This button still goes to the default login view */}
-                    <button onClick={() => navigate('/auth')} className={buttonClasses}>
+                    {/* --- 3. APPLY the style conditionally to the buttons --- */}
+                    <button
+                        onClick={() => navigate('/auth')}
+                        className={buttonClasses}
+                        style={shouldGlow ? glowStyle : {}}
+                    >
                         <User size={18} />
                         Login
                     </button>
-                    {/* --- THIS IS THE FIX --- */}
-                    {/* This button now tells the AuthPage to show the 'signup' mode */}
-                    <button onClick={() => navigate('/auth?mode=signup')} className={buttonClasses}>
+                    <button
+                        onClick={() => navigate('/auth?mode=signup')}
+                        className={buttonClasses}
+                        style={shouldGlow ? glowStyle : {}}
+                    >
                         <UserPlus size={18} />
                         Register
                     </button>

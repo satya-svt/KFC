@@ -19,7 +19,7 @@ const HomePage = () => {
         // Reset the glow effect after the animation finishes (2 seconds)
         setTimeout(() => {
             setIsGlowing(false);
-        }, 2000);
+        }, 4000);
     };
 
     return (
