@@ -526,7 +526,7 @@ export default function AdminDashboard() {
 
             <Download className="w-4 h-4" />
 
-            Export CSV
+            Export Excel
 
           </motion.button>
 
@@ -588,11 +588,6 @@ export default function AdminDashboard() {
 
           </p>
 
-          <p className="text-xs text-gray-400 mt-1">
-
-            {selectedUser === 'all' ? 'All users' : `User: ${selectedUser}`}
-
-          </p>
 
         </motion.div>
 
@@ -652,7 +647,7 @@ export default function AdminDashboard() {
 
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
 
-          <h3 className="text-lg font-semibold mb-4">Filter by User</h3>
+          <h3 className="text-lg font-semibold mb-4">Filter by Organization</h3>
 
           <div className="flex flex-wrap gap-2">
 
@@ -762,29 +757,7 @@ export default function AdminDashboard() {
 
           </motion.div>
 
-          <motion.div
 
-            className="bg-gradient-to-r from-purple-600/20 to-purple-800/20 p-6 rounded-lg border border-purple-500/20 backdrop-blur-lg"
-
-            whileHover={{ scale: 1.02 }}
-
-            transition={{ duration: 0.2 }}
-
-          >
-
-            <div className="flex items-center gap-3 mb-2">
-
-              <TrendingUp className="w-5 h-5 text-purple-400" />
-
-              <p className="text-sm text-purple-300 font-medium">Average Emissions</p>
-
-            </div>
-
-            <p className="text-3xl font-bold text-white">{feedStats.averageEmissions.toLocaleString()}</p>
-
-            <p className="text-sm text-purple-200 mt-1">Average emissions per entry</p>
-
-          </motion.div>
 
         </div>
 

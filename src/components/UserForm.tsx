@@ -401,7 +401,7 @@ export default function UserForm() {
                 <h4 className="text-green-200 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-green-300/80 text-sm">
-                {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length} complete feed {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length === 1 ? 'entry' : 'entries'} ready for submission.
+                All required fields are filled.
               </p>
             </motion.div>
           )}

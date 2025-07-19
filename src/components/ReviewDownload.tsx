@@ -175,7 +175,7 @@ export default function ReviewDownload() {
     }
   }
 
-  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-400', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['Entry', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-400', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['Entry', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-400', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['Entry', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-400', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['Entry', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-400', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['Entry', 'Route', 'Vehicle Type', 'Distance'] }];
+  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-400', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-400', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-400', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-400', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['S.no', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-400', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['S.no', 'Route', 'Vehicle Type', 'Distance'] }];
   const completedSections = sections.filter(section => section.data.length > 0);
 
   if (loading) {
@@ -314,7 +314,7 @@ export default function ReviewDownload() {
                     <div className="flex items-center space-x-3 mb-4">
                       <Icon className={`w-6 h-6 ${section.color}`} />
                       <h3 className="text-xl font-semibold text-white">{section.title}</h3>
-                      <span className="text-sm text-gray-400">({section.data.length} entries)</span>
+
                     </div>
 
                     <div className="overflow-x-auto">
@@ -365,20 +365,7 @@ export default function ReviewDownload() {
                     <FileText className="w-5 h-5 text-red-400" />
                     <span>Download as PDF</span>
                   </button>
-                  <button
-                    onClick={() => handleDownload('csv')}
-                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
-                  >
-                    <FileText className="w-5 h-5 text-green-400" />
-                    <span>Download as CSV</span>
-                  </button>
-                  <button
-                    onClick={() => handleDownload('xlsx')}
-                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
-                  >
-                    <FileText className="w-5 h-5 text-blue-400" />
-                    <span>Download as Excel</span>
-                  </button>
+
                 </div>
               </motion.div>
             </div>

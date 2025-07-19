@@ -406,7 +406,7 @@ export default function Transport() {
                 <h4 className="text-green-200 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-green-300/80 text-sm">
-                All transport information has been completed and is ready for submission.
+                All required fields are filled.
               </p>
             </motion.div>
           )}
