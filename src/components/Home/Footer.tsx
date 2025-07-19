@@ -39,10 +39,7 @@ const Footer: React.FC = () => {
                                 <span className="text-gray-300">+91 88856 62977</span>
                             </div>
                             {/* Corrected 'items-right' to 'items-center' */}
-                            <div className="flex items-center gap-3">
-                                <Globe size={18} className="text-red-400" />
-                                <span className="text-gray-300"></span>
-                            </div>
+
                         </div>
                     </div>
                 </div>
