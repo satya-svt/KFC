@@ -216,7 +216,7 @@ export default function UserForm() {
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
 
-            <p className="text-gray-300 mb-6">Feed has been submitted</p>
+            <p className="text-gray-300 mb-6">Feed data has been submitted</p>
             {/* --- UPDATED THIS SECTION --- */}
             <div className="space-y-4">
               <motion.button
@@ -380,7 +380,7 @@ export default function UserForm() {
                       onChange={(e) => updateFeedRow(index, 'quantity', e.target.value)}
                       className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${row.quantity ? 'border-green-500/30' : 'border-white/20'
                         }`}
-                      placeholder={index === 0 ? "Enter quantity" : "Enter quantity (optional)"}
+                      placeholder={index === 0 ? "0000" : "Enter quantity (optional)"}
                       min="0"
                       step="any"
                       required={index === 0}

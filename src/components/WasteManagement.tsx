@@ -470,7 +470,7 @@ export default function WasteManagement() {
                 <h4 className="text-green-200 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-green-300/80 text-sm">
-                All waste management information has been completed and is ready for submission.
+                All required fields are filled.
               </p>
             </motion.div>
           )}

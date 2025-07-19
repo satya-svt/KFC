@@ -26,7 +26,7 @@ const HeroSection: React.FC = () => {
                         90% of Global Chicken Meat is BROILER
                     </p>
                     <p className="text-3xl md:text-4xl font-medium"> {/* Matched size to the line above */}
-                        A lot can be - More Sustainable
+                        A lot can be made - More Sustainable
                     </p>
                 </div>
 
