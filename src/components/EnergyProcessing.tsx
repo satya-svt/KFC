@@ -480,7 +480,7 @@ export default function EnergyProcessing() {
                 <h4 className="text-green-200 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-green-300/80 text-sm">
-                All required facility entries configured and ready for submission.
+                All required fields are filled.
               </p>
             </motion.div>
           )}

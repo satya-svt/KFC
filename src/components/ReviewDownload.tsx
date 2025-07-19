@@ -20,12 +20,11 @@ import {
   Calendar
 } from 'lucide-react'
 
-// === NEW: Utility functions for download formats ===
+// Utility functions for download formats
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 
-// Helper to flatten all responses for export
 function getFlattenedResponses(allData: Record<string, any>) {
   const result: any[] = []
   const typeMap: Record<string, string> = {
@@ -49,55 +48,33 @@ function getFlattenedResponses(allData: Record<string, any>) {
   return result
 }
 
-// PDF
 function downloadAsPDFFromData(allData: Record<string, any>) {
   const doc = new jsPDF()
   const responseRows = getFlattenedResponses(allData)
-
   if (responseRows.length === 0) {
     alert("No data to download.")
     return
   }
-
-  // Add title and user info
   doc.setFontSize(20)
   doc.text('Submission Export', 14, 22)
-
   doc.setFontSize(12)
   doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35)
   doc.text(`Total Entries: ${responseRows.length}`, 14, 45)
-
-  // Build table with all data
   const columns = Object.keys(responseRows[0])
   const tableData = responseRows.map(row => columns.map(col => row[col] ?? ""))
-
   autoTable(doc, {
     head: [columns],
     body: tableData,
     startY: 55,
     margin: { left: 14, right: 14 },
-    styles: {
-      fontSize: 8,
-      cellPadding: 3
-    },
-    headStyles: {
-      fillColor: [66, 66, 66],
-      textColor: [255, 255, 255],
-      fontSize: 9
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245]
-    },
-    columnStyles: {
-      0: { cellWidth: 20 }, // Section column
-      1: { cellWidth: 15 }   // Entry column
-    }
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255], fontSize: 9 },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    columnStyles: { 0: { cellWidth: 20 }, 1: { cellWidth: 15 } }
   })
-
   doc.save('submission.pdf')
 }
 
-// CSV
 function downloadAsCSVFromData(allData: Record<string, any>) {
   const responseRows = getFlattenedResponses(allData)
   if (responseRows.length === 0) {
@@ -121,7 +98,6 @@ function downloadAsCSVFromData(allData: Record<string, any>) {
   window.URL.revokeObjectURL(url)
 }
 
-// Excel
 function downloadAsExcelFromData(allData: Record<string, any>) {
   const responseRows = getFlattenedResponses(allData)
   if (responseRows.length === 0) {
@@ -134,8 +110,6 @@ function downloadAsExcelFromData(allData: Record<string, any>) {
   XLSX.writeFile(workbook, 'submission.xlsx')
 }
 
-// === END NEW UTILS ===
-
 export default function ReviewDownload() {
   const navigate = useNavigate()
   const [allData, setAllData] = useState<Record<string, any>>({})
@@ -147,8 +121,7 @@ export default function ReviewDownload() {
     profile: null
   })
   const [downloading, setDownloading] = useState<string | null>(null)
-
-  const entryId = 'entry_1' // For now, using default entry
+  const entryId = 'entry_1'
 
   useEffect(() => {
     const loadData = async () => {
@@ -156,7 +129,6 @@ export default function ReviewDownload() {
         const data = await getAllAutoSavedData(entryId)
         const email = await getCurrentUserEmail()
         const profile = getUserProfile()
-
         setAllData(data)
         setUserInfo({ email, profile })
       } catch (error) {
@@ -165,11 +137,9 @@ export default function ReviewDownload() {
         setLoading(false)
       }
     }
-
     loadData()
   }, [entryId])
 
-  // === CHANGED: Use correct utility for download ===
   const handleDownload = async (format: 'pdf' | 'csv' | 'xlsx') => {
     setDownloading(format)
     setShowDownloadMenu(false)
@@ -192,111 +162,31 @@ export default function ReviewDownload() {
       setDownloading(null)
     }
   }
-  // === END CHANGED ===
 
   const formatDataForDisplay = (data: any[], type: string) => {
     if (!data || !Array.isArray(data)) return []
-
     switch (type) {
-      case 'feed':
-        return data.map((item, index) => ({
-          entry: index + 1,
-          feedType: item.feed_type || 'N/A',
-          quantity: item.quantity || 'N/A',
-          unit: item.unit || 'N/A'
-        }))
-      case 'manure':
-        return data.map((item, index) => ({
-          entry: index + 1,
-          systemType: item.systemType || 'N/A',
-          daysUsed: item.daysUsed || 'N/A'
-        }))
-      case 'energy':
-        return data.map((item, index) => ({
-          entry: index + 1,
-          facility: item.facility || 'N/A',
-          energyType: item.energyType || 'N/A',
-          unit: item.unit || 'N/A',
-          consumption: item.consumption || 'N/A'
-        }))
-      case 'waste':
-        return data.map((item, index) => ({
-          entry: index + 1,
-          wasteWater: item.wasteWaterTreated || 'N/A',
-          oxygenDemand: item.oxygenDemand || 'N/A',
-          etp: item.etp || 'N/A',
-          treatmentType: item.waterTreatmentType || 'N/A'
-        }))
-      case 'transport':
-        return data.map((item, index) => ({
-          entry: index + 1,
-          route: item.route || 'N/A',
-          vehicleType: item.vehicleType || 'N/A',
-          distance: item.distance || 'N/A'
-        }))
-      default:
-        return []
+      case 'feed': return data.map((item, index) => ({ entry: index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
+      case 'manure': return data.map((item, index) => ({ entry: index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
+      case 'energy': return data.map((item, index) => ({ entry: index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
+      case 'waste': return data.map((item, index) => ({ entry: index + 1, wasteWater: item.wasteWaterTreated || 'N/A', oxygenDemand: item.oxygenDemand || 'N/A', etp: item.etp || 'N/A', treatmentType: item.waterTreatmentType || 'N/A' }));
+      case 'transport': return data.map((item, index) => ({ entry: index + 1, route: item.route || 'N/A', vehicleType: item.vehicleType || 'N/A', distance: item.distance || 'N/A' }));
+      default: return [];
     }
   }
 
-  const sections = [
-    {
-      key: 'feed',
-      title: 'FEED Data',
-      icon: Wheat,
-      color: 'text-green-400',
-      data: formatDataForDisplay(allData.feed, 'feed'),
-      headers: ['Entry', 'Feed Type', 'Quantity', 'Unit']
-    },
-    {
-      key: 'manure',
-      title: 'Manure Management',
-      icon: Recycle,
-      color: 'text-yellow-400',
-      data: formatDataForDisplay(allData.manure, 'manure'),
-      headers: ['Entry', 'System Type', 'Days Used']
-    },
-    {
-      key: 'energy',
-      title: 'Energy & Processing',
-      icon: Zap,
-      color: 'text-blue-400',
-      data: formatDataForDisplay(allData.energy, 'energy'),
-      headers: ['Entry', 'Facility', 'Energy Type', 'Unit', 'Consumption']
-    },
-    {
-      key: 'waste',
-      title: 'Waste Management',
-      icon: Droplets,
-      color: 'text-cyan-400',
-      data: formatDataForDisplay(allData.waste, 'waste'),
-      headers: ['Entry', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type']
-    },
-    {
-      key: 'transport',
-      title: 'Transport',
-      icon: Truck,
-      color: 'text-purple-400',
-      data: formatDataForDisplay(allData.transport, 'transport'),
-      headers: ['Entry', 'Route', 'Vehicle Type', 'Distance']
-    }
-  ]
-
-  const completedSections = sections.filter(section => section.data.length > 0)
+  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-400', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['Entry', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-400', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['Entry', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-400', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['Entry', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-400', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['Entry', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-400', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['Entry', 'Route', 'Vehicle Type', 'Distance'] }];
+  const completedSections = sections.filter(section => section.data.length > 0);
 
   if (loading) {
     return (
       <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-xl">Loading your submission...</p>
         </motion.div>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -323,18 +213,13 @@ export default function ReviewDownload() {
               <p className="text-gray-300">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
 
-            {/* User Info */}
             <motion.div
               className="bg-white/5 border border-white/10 rounded-lg p-6 mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-3">
-                  <User className="w-5 h-5 text-blue-400" />
-
-                </div>
+              <div className="flex flex-col md:flex-row md:justify-center md:gap-16 gap-4">
                 <div className="flex items-center space-x-3">
                   <Building2 className="w-5 h-5 text-green-400" />
                   <div>
@@ -352,7 +237,6 @@ export default function ReviewDownload() {
               </div>
             </motion.div>
 
-            {/* Completion Status */}
             <motion.div
               className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -364,11 +248,10 @@ export default function ReviewDownload() {
                 <h3 className="text-green-200 font-medium">Submission Complete</h3>
               </div>
               <p className="text-green-300/80 text-sm">
-                {completedSections.length} of 5 sections completed: {completedSections.map(s => s.title).join(', ')}
+                ({completedSections.length} of 5 sections completed)
               </p>
             </motion.div>
 
-            {/* Action Buttons */}
             <div className="space-y-4">
               <motion.button
                 onClick={() => setShowReview(true)}
@@ -383,71 +266,8 @@ export default function ReviewDownload() {
                 <span>Review Your Submission</span>
               </motion.button>
 
-              {/* Download Dropdown */}
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <motion.button
-                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={downloading !== null}
-                >
-                  {downloading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Downloading {downloading.toUpperCase()}...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-5 h-5" />
-                      <span>Download Your Submission</span>
-                      <ChevronDown className={`w-5 h-5 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
-                    </>
-                  )}
-                </motion.button>
-
-                <AnimatePresence>
-                  {showDownloadMenu && (
-                    <motion.div
-                      className="absolute top-full left-0 right-0 mt-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg overflow-hidden z-10"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <button
-                        onClick={() => handleDownload('pdf')}
-                        className="w-full px-6 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center space-x-3"
-                      >
-                        <FileText className="w-4 h-4 text-red-400" />
-                        <span>Download as PDF</span>
-                      </button>
-                      <button
-                        onClick={() => handleDownload('csv')}
-                        className="w-full px-6 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center space-x-3"
-                      >
-                        <FileText className="w-4 h-4 text-green-400" />
-                        <span>Download as CSV</span>
-                      </button>
-                      <button
-                        onClick={() => handleDownload('xlsx')}
-                        className="w-full px-6 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center space-x-3"
-                      >
-                        <FileText className="w-4 h-4 text-blue-400" />
-                        <span>Download as Excel</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
               <motion.button
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/')}
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -482,7 +302,7 @@ export default function ReviewDownload() {
 
             <div className="space-y-6 max-h-96 overflow-y-auto">
               {completedSections.map((section, index) => {
-                const Icon = section.icon
+                const Icon = section.icon;
                 return (
                   <motion.div
                     key={section.key}
@@ -522,8 +342,45 @@ export default function ReviewDownload() {
                       </table>
                     </div>
                   </motion.div>
-                )
+                );
               })}
+
+              {/* --- THIS IS THE FIX --- */}
+              {/* The download options are now in their own styled section */}
+              <motion.div
+                className="bg-white/5 border border-white/10 rounded-lg p-6 mt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: completedSections.length * 0.1 }}
+              >
+                <div className="flex items-center space-x-3 mb-4">
+                  <Download className={`w-6 h-6 text-green-400`} />
+                  <h3 className="text-xl font-semibold text-white">Download Submission</h3>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => handleDownload('pdf')}
+                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
+                  >
+                    <FileText className="w-5 h-5 text-red-400" />
+                    <span>Download as PDF</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownload('csv')}
+                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
+                  >
+                    <FileText className="w-5 h-5 text-green-400" />
+                    <span>Download as CSV</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownload('xlsx')}
+                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
+                  >
+                    <FileText className="w-5 h-5 text-blue-400" />
+                    <span>Download as Excel</span>
+                  </button>
+                </div>
+              </motion.div>
             </div>
           </>
         )}

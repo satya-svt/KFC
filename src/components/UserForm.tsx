@@ -299,7 +299,35 @@ export default function UserForm() {
                 transition={{ delay: 0.4 + (index * 0.05) }}
               >
                 <div className="flex items-center justify-between mb-3">
-                  {/* ... (This section is unchanged) ... */}
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-white font-medium">Feed Entry {index + 1}</h4>
+                    {index === 0 ? (
+                      isFirstRowComplete && (
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      )
+                    ) : (
+                      (row.feed_type && row.quantity && row.unit) && (
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      )
+                    )}
+                  </div>
+                  {index === 0 ? (
+                    <span className="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded-full border border-red-500/30">
+                      Required
+                    </span>
+                  ) : (
+                    (feedRows.length > 1) && (
+                      <motion.button
+                        type="button"
+                        onClick={() => handleRemoveEntry(index)}
+                        className="text-red-400 hover:text-red-300 text-xs bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded border border-red-500/20 transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Remove
+                      </motion.button>
+                    )
+                  )}
                 </div>
                 {/* --- 2. UPDATED Input Rows Order --- */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -362,8 +390,59 @@ export default function UserForm() {
             </div>
           </div>
 
-          {/* ... (The rest of the form is unchanged) ... */}
+          {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length > 0 && (
+            <motion.div
+              className="bg-green-500/10 border border-green-500/20 rounded-lg p-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                <h4 className="text-green-200 font-medium">Ready to Submit</h4>
+              </div>
+              <p className="text-green-300/80 text-sm">
+                {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length} complete feed {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length === 1 ? 'entry' : 'entries'} ready for submission.
+              </p>
+            </motion.div>
+          )}
 
+          {submitStatus === 'error' && (
+            <motion.div className="flex items-center space-x-2 text-red-400 bg-red-900/20 border border-red-500/20 rounded-lg p-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{errorMessage}</span>
+            </motion.div>
+          )}
+
+          <motion.button
+            type="submit"
+            disabled={!canSubmit}
+            className={`w-full font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform flex items-center justify-center space-x-2 shadow-lg ${canSubmit
+              ? 'bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 hover:shadow-xl'
+              : 'bg-gray-600 cursor-not-allowed text-gray-300'
+              }`}
+            whileHover={{ scale: canSubmit ? 1.05 : 1 }}
+            whileTap={{ scale: canSubmit ? 0.95 : 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Submitting...</span>
+              </>
+            ) : !isFirstRowComplete ? (
+              <>
+                <AlertCircle className="w-5 h-5" />
+                <span>Complete the required entry to submit</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                <span>Next</span>
+              </>
+            )}
+          </motion.button>
         </form>
       </motion.div>
     </motion.div>

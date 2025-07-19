@@ -662,9 +662,9 @@ export default function AdminDashboard() {
 
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedUser === 'all'
 
-                  ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-white'
 
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
 
                 }`}
 
@@ -688,9 +688,9 @@ export default function AdminDashboard() {
 
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedUser === email
 
-                    ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white'
 
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
 
                   }`}
 
