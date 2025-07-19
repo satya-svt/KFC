@@ -336,7 +336,7 @@ export default function AuthPage() {
               <div>
                 Don't have an account?{' '}
                 <button onClick={() => setAuthMode('signup')} className="text-white hover:underline">
-                  Sign up
+                  Register
                 </button>
               </div>
             </>
