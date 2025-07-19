@@ -11,7 +11,7 @@ import {
   Zap,
   Plus,
   Trash2,
-  Home // Added Home icon
+  Home
 } from 'lucide-react'
 
 const energyTypeOptions = [
@@ -53,14 +53,13 @@ export default function EnergyProcessing() {
 
   const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true)
 
-  const entryId = 'entry_1' // For now, using default entry
+  const entryId = 'entry_1'
 
   React.useEffect(() => {
     const loadUserProfile = async () => {
       const profile = getUserProfile()
       setUserProfile(profile)
 
-      // Load auto-saved data
       try {
         const savedData = await loadAutoSavedData('energy', entryId)
         if (savedData && Array.isArray(savedData)) {
@@ -75,7 +74,6 @@ export default function EnergyProcessing() {
     loadUserProfile()
   }, [])
 
-  // Save data when navigating away
   React.useEffect(() => {
     const handleBeforeUnload = () => {
       const hasData = energyRows.some(row => row.energyType || row.unit || row.consumption)
@@ -96,10 +94,8 @@ export default function EnergyProcessing() {
     }
   }, [energyRows, entryId])
 
-  // Auto-save functionality
   React.useEffect(() => {
     if (!isLoadingAutoSave && energyRows.length > 0) {
-      // Only auto-save if there's meaningful data
       const hasData = energyRows.some(row => row.energyType || row.unit || row.consumption)
       if (hasData) {
         autoSaveFormData('energy', energyRows, entryId)
@@ -110,12 +106,6 @@ export default function EnergyProcessing() {
   const updateEnergyRow = (index: number, field: keyof EnergyRow, value: string) => {
     setEnergyRows(prev => prev.map((row, i) =>
       i === index ? { ...row, [field]: value } : row
-    ))
-  }
-
-  const clearRow = (index: number) => {
-    setEnergyRows(prev => prev.map((row, i) =>
-      i === index ? { ...row, energyType: '', unit: '', consumption: '' } : row
     ))
   }
 
@@ -130,7 +120,6 @@ export default function EnergyProcessing() {
     setEnergyRows(prev => prev.filter((_, i) => i !== index))
   }
 
-  // Ensure each section (Hatchery, Processing Plant, Farm) has at least one valid row
   const hasValidRowForFacility = (facility: string) =>
     energyRows.some(row =>
       row.facility === facility &&
@@ -142,7 +131,6 @@ export default function EnergyProcessing() {
     hasValidRowForFacility('Processing Plant') &&
     hasValidRowForFacility('Farm')
 
-  // Only submit valid rows
   const validRows = energyRows.filter(row =>
     row.energyType && row.unit && row.consumption
   )
@@ -151,7 +139,6 @@ export default function EnergyProcessing() {
     e.preventDefault()
     if (isSubmitting) return
 
-    // Build specific error messages for missing facilities
     let missingFacilities: string[] = []
     if (!hasValidRowForFacility('Hatchery Plant')) missingFacilities.push('Hatchery Plant')
     if (!hasValidRowForFacility('Processing Plant')) missingFacilities.push('Processing Plant')
@@ -193,7 +180,6 @@ export default function EnergyProcessing() {
       const { error } = await supabase.from('data_rows').insert(dataToInsert)
       if (error) throw error
 
-      // Clear auto-saved data after successful submission
       await clearAutoSavedData('energy', entryId)
 
       setSubmitStatus('success')
@@ -207,15 +193,10 @@ export default function EnergyProcessing() {
     }
   }
 
-  // Show loading state while loading auto-saved data
   if (isLoadingAutoSave) {
     return (
       <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-xl">Loading your saved data...</p>
         </motion.div>
@@ -231,29 +212,15 @@ export default function EnergyProcessing() {
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-
             <p className="text-gray-300 mb-6">Energy & processing data has been submitted</p>
             <div className="space-y-4">
-              <motion.button
-                onClick={() => navigate('/waste')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <motion.button onClick={() => navigate('/waste')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 Continue to Waste Management
               </motion.button>
-
-              {/* --- ADDED THIS BUTTON --- */}
-              <motion.button
-                onClick={() => navigate('/')}
-                className="w-full flex items-center justify-center gap-2 bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <motion.button onClick={() => navigate('/')} className="w-full flex items-center justify-center gap-2 bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-300" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Home className="w-5 h-5" />
                 Exit to Home Page
               </motion.button>
-
             </div>
           </div>
         </motion.div>
@@ -261,30 +228,16 @@ export default function EnergyProcessing() {
     )
   }
 
-  // Group rows by facility for rendering and for add buttons
   const farmRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Farm')
   const processingRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Processing Plant')
   const hatcheryRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Hatchery Plant')
 
   const sectionBgClasses = [
-    {
-      row: "bg-gray-900/60 hover:bg-gray-800/80",
-      text: "text-white",
-      block: "bg-gray-900/60 text-white border-r border-white/10"
-    },
-    {
-      row: "bg-gray-800/60 hover:bg-gray-800/80",
-      text: "text-white",
-      block: "bg-gray-800/60 text-white border-r border-white/10"
-    },
-    {
-      row: "bg-gray-900/60 hover:bg-gray-800/80",
-      text: "text-white",
-      block: "bg-gray-900/60 text-white border-r border-white/10"
-    }
+    { row: "bg-gray-900/60 hover:bg-gray-800/80", text: "text-white", block: "bg-gray-900/60 text-white border-r border-white/10" },
+    { row: "bg-gray-800/60 hover:bg-gray-800/80", text: "text-white", block: "bg-gray-800/60 text-white border-r border-white/10" },
+    { row: "bg-gray-900/60 hover:bg-gray-800/80", text: "text-white", block: "bg-gray-900/60 text-white border-r border-white/10" }
   ]
 
-  // Order: Hatchery Plant, Processing Plant, Farm
   return (
     <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
       <motion.div
@@ -341,18 +294,19 @@ export default function EnergyProcessing() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-white/10 border-b border-white/20">
-                    <th className="px-6 py-4 text-left text-white font-semibold w-1/6"></th>
-                    <th className="px-6 py-4 text-center text-white-400 font-semibold w-2/6">Select Type of Energy</th>
-                    <th className="px-6 py-4 text-center text-white-400 font-semibold w-1/6">Select unit</th>
-                    <th className="px-6 py-4 text-center text-white-400 font-semibold w-2/6">Input Amount of Consumption</th>
+                    <th className="px-6 py-4 text-left text-white font-semibold w-1/6">Facility</th>
+                    <th className="px-6 py-4 text-center text-white font-semibold w-2/6">Select Type of Energy</th>
+                    <th className="px-6 py-4 text-center text-white font-semibold w-1/6">Select unit</th>
+                    <th className="px-6 py-4 text-center text-white font-semibold w-2/6">Input Amount of Consumption</th>
                     <th className="px-6 py-4 w-12"></th>
                   </tr>
                 </thead>
+                {/* --- THIS IS THE FIX: The sections below have been reordered --- */}
                 <tbody>
-                  {/* HATCHERY PLANT section (always first) */}
+                  {/* HATCHERY PLANT section (first) */}
                   {hatcheryRows.map((row, rindex) => {
-                    const sectionClass = sectionBgClasses[2].row + " " + sectionBgClasses[2].text
-                    const blockClass = sectionBgClasses[2].block
+                    const sectionClass = sectionBgClasses[2].row + " " + sectionBgClasses[2].text;
+                    const blockClass = sectionBgClasses[2].block;
                     return (
                       <tr key={`hatchery-${row.index}`} className={sectionClass}>
                         {rindex === 0 && (
@@ -363,58 +317,29 @@ export default function EnergyProcessing() {
                         <td className="px-6 py-4">
                           <div className="relative">
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.energyType}
-                              onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
                               <option value="" className="bg-gray-800 text-gray-300">Select energy type</option>
-                              {energyTypeOptions.map(option => (
-                                <option key={option} value={option} className="bg-gray-800 text-white">
-                                  {option}
-                                </option>
-                              ))}
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="bg-gray-800 text-white">{option}</option>))}
                             </select>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="relative">
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.unit}
-                              onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
                               <option value="" className="bg-gray-800 text-gray-300">Select unit</option>
-                              {unitOptions.map(unit => (
-                                <option key={unit} value={unit} className="bg-gray-800 text-white">
-                                  {unit}
-                                </option>
-                              ))}
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="bg-gray-800 text-white">{unit}</option>))}
                             </select>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={row.consumption}
-                              onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)}
-                              className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right"
-                              placeholder="Enter amount"
-                            />
+                            <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right" placeholder="Enter amount" />
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
                           {hatcheryRows.length > 1 && (
-                            <motion.button
-                              type="button"
-                              onClick={() => handleRemoveEntry(row.index)}
-                              className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              title="Remove row"
-                            >
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-400 hover:text-red-300 p-1 rounded transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
                               <Trash2 className="w-4 h-4" />
                             </motion.button>
                           )}
@@ -425,110 +350,17 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button
-                          type="button"
-                          className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300"
-                          onClick={() => handleAddEntry('Hatchery Plant')}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
+                        <motion.button type="button" className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300" onClick={() => handleAddEntry('Hatchery Plant')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           + New Entry
                         </motion.button>
                       </div>
                     </td>
                   </tr>
-                  {/* PROCESSING PLANT section (now second) */}
-                  {processingRows.map((row, rindex) => {
-                    const sectionClass = sectionBgClasses[1].row + " " + sectionBgClasses[1].text
-                    const blockClass = sectionBgClasses[1].block
-                    return (
-                      <tr key={`processing-${row.index}`} className={sectionClass}>
-                        {rindex === 0 && (
-                          <td rowSpan={processingRows.length} className={`px-6 py-4 font-medium text-center align-middle ${blockClass}`}>
-                            Processing Plant
-                          </td>
-                        )}
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.energyType}
-                              onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
-                              <option value="" className="bg-gray-800 text-gray-300">Select energy type</option>
-                              {energyTypeOptions.map(option => (
-                                <option key={option} value={option} className="bg-gray-800 text-white">
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.unit}
-                              onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
-                              <option value="" className="bg-gray-800 text-gray-300">Select unit</option>
-                              {unitOptions.map(unit => (
-                                <option key={unit} value={unit} className="bg-gray-800 text-white">
-                                  {unit}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={row.consumption}
-                              onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)}
-                              className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-right"
-                              placeholder="Enter amount"
-                            />
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {processingRows.length > 1 && (
-                            <motion.button
-                              type="button"
-                              onClick={() => handleRemoveEntry(row.index)}
-                              className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              title="Remove row"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                  <tr>
-                    <td colSpan={5} className="px-6 py-2">
-                      <div className="flex justify-left">
-                        <motion.button
-                          type="button"
-                          className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300"
-                          onClick={() => handleAddEntry('Processing Plant')}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          + New Entry
-                        </motion.button>
-                      </div>
-                    </td>
-                  </tr>
-                  {/* FARM section (now last) */}
+
+                  {/* FARM section (now second) */}
                   {farmRows.map((row, rindex) => {
-                    const sectionClass = sectionBgClasses[0].row + " " + sectionBgClasses[0].text
-                    const blockClass = sectionBgClasses[0].block
+                    const sectionClass = sectionBgClasses[0].row + " " + sectionBgClasses[0].text;
+                    const blockClass = sectionBgClasses[0].block;
                     return (
                       <tr key={`farm-${row.index}`} className={sectionClass}>
                         {rindex === 0 && (
@@ -539,58 +371,29 @@ export default function EnergyProcessing() {
                         <td className="px-6 py-4">
                           <div className="relative">
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.energyType}
-                              onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
                               <option value="" className="bg-gray-800 text-gray-300">Select energy type</option>
-                              {energyTypeOptions.map(option => (
-                                <option key={option} value={option} className="bg-gray-800 text-white">
-                                  {option}
-                                </option>
-                              ))}
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="bg-gray-800 text-white">{option}</option>))}
                             </select>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="relative">
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.unit}
-                              onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)}
-                              className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
                               <option value="" className="bg-gray-800 text-gray-300">Select unit</option>
-                              {unitOptions.map(unit => (
-                                <option key={unit} value={unit} className="bg-gray-800 text-white">
-                                  {unit}
-                                </option>
-                              ))}
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="bg-gray-800 text-white">{unit}</option>))}
                             </select>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={row.consumption}
-                              onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)}
-                              className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right"
-                              placeholder="Enter amount"
-                            />
+                            <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right" placeholder="Enter amount" />
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
                           {farmRows.length > 1 && (
-                            <motion.button
-                              type="button"
-                              onClick={() => handleRemoveEntry(row.index)}
-                              className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              title="Remove row"
-                            >
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-400 hover:text-red-300 p-1 rounded transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
                               <Trash2 className="w-4 h-4" />
                             </motion.button>
                           )}
@@ -601,13 +404,61 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button
-                          type="button"
-                          className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300"
-                          onClick={() => handleAddEntry('Farm')}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
+                        <motion.button type="button" className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300" onClick={() => handleAddEntry('Farm')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          + New Entry
+                        </motion.button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* PROCESSING PLANT section (now last) */}
+                  {processingRows.map((row, rindex) => {
+                    const sectionClass = sectionBgClasses[1].row + " " + sectionBgClasses[1].text;
+                    const blockClass = sectionBgClasses[1].block;
+                    return (
+                      <tr key={`processing-${row.index}`} className={sectionClass}>
+                        {rindex === 0 && (
+                          <td rowSpan={processingRows.length} className={`px-6 py-4 font-medium text-center align-middle ${blockClass}`}>
+                            Processing Plant
+                          </td>
+                        )}
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
+                              <option value="" className="bg-gray-800 text-gray-300">Select energy type</option>
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="bg-gray-800 text-white">{option}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer">
+                              <option value="" className="bg-gray-800 text-gray-300">Select unit</option>
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="bg-gray-800 text-white">{unit}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="flex-1 px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-right" placeholder="Enter amount" />
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {processingRows.length > 1 && (
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-400 hover:text-red-300 p-1 rounded transition-colors" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-2">
+                      <div className="flex justify-left">
+                        <motion.button type="button" className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300" onClick={() => handleAddEntry('Processing Plant')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           + New Entry
                         </motion.button>
                       </div>
