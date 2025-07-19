@@ -16,7 +16,6 @@ import {
   User,
   Building2,
   Home,
-  // --- MERGED: Added new icons for the form ---
   MapPin,
   Globe,
   ChevronDown
@@ -24,7 +23,6 @@ import {
 
 type AuthMode = 'login' | 'signup' | 'forgot';
 
-// --- MERGED: Added constants for the new dropdowns ---
 const organizationOptions = [
   'org1', 'org2', 'org3', 'org4', 'org5', 'org6', 'org7', 'org8', 'org9', 'org10',
   'org11', 'org12', 'org13', 'org14', 'org15', 'org16', 'org17', 'org18', 'org19', 'org20',
@@ -53,7 +51,6 @@ export default function AuthPage() {
   const [showAdminAccess, setShowAdminAccess] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
-  // --- MERGED: Updated formData state for the new fields ---
   const [formData, setFormData] = useState({
     emailOrUsername: '',
     password: '',
@@ -64,7 +61,6 @@ export default function AuthPage() {
   });
 
   useEffect(() => {
-    // Kept your existing useEffect, as it correctly handles mode and redirects
     const searchParams = new URLSearchParams(location.search);
     const mode = searchParams.get('mode');
     if (mode === 'signup') {
@@ -89,7 +85,6 @@ export default function AuthPage() {
     return () => subscription.unsubscribe();
   }, [navigate, location.search]);
 
-  // --- MERGED: Updated handleAuth function with new sign-up logic ---
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -129,6 +124,7 @@ export default function AuthPage() {
         setMessageType('success');
 
       } else if (authMode === 'login') {
+        // Login logic remains the same, using email and password
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.emailOrUsername,
           password: formData.password
@@ -229,42 +225,29 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-6">
-          {/* --- MERGED: Replaced the old sign-up form with the new one --- */}
-          {authMode === 'signup' && (
-            <>
-              {/* Organization Name Dropdown */}
-              <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  value={formData.organizationName}
-                  onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                  required
-                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                >
-                  <option value="" disabled className="bg-gray-800 text-gray-300">Select Organization</option>
-                  {organizationOptions.map(org => (
-                    <option key={org} value={org} className="bg-gray-800 text-white">
-                      {org}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-              </div>
-            </>
+          {/* --- THIS IS THE FIX --- */}
+          {/* The Organization dropdown now appears for both login and signup modes */}
+          {(authMode === 'login' || authMode === 'signup') && (
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={formData.organizationName}
+                onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                required
+                className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              >
+                <option value="" disabled className="bg-gray-800 text-gray-300">Select Organization</option>
+                {organizationOptions.map(org => (
+                  <option key={org} value={org} className="bg-gray-800 text-white">
+                    {org}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            </div>
           )}
 
-          {/* Email Input */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="email"
-              value={formData.emailOrUsername}
-              onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
-              placeholder="Enter your email"
-              required
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
-            />
-          </div>
+
 
           {/* Password Input */}
           {authMode !== 'forgot' && (
