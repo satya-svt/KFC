@@ -265,7 +265,18 @@ export default function AuthPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             </div>
           )}
-
+          {/* Email Input */}
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="email"
+              value={formData.emailOrUsername}
+              onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
+              placeholder="Enter your email"
+              required
+              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+            />
+          </div>
 
 
           {authMode !== 'forgot' && (
