@@ -9,7 +9,7 @@ import {
 import {
   TrendingUp, Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Home, Lock
 } from 'lucide-react'
-import * as XLSX from 'xlsx' // Import xlsx library for Excel export
+import * as XLSX from 'xlsx'
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
@@ -21,13 +21,10 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
-  // --- 1. RENAMED state to reflect filtering by organization ---
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
 
-  // --- 2. CREATE a list of unique organization names for the filter ---
   const uniqueOrgs = Array.from(new Set(responses.map(r => r.organization_name).filter(Boolean)));
 
-  // --- 3. UPDATE filtering logic to use the selected organization ---
   const filteredResponses = selectedOrg === 'all'
     ? responses
     : responses.filter(r => r.organization_name === selectedOrg);
@@ -37,14 +34,11 @@ export default function AdminDashboard() {
       totalEmissions: 0,
       averageEmissions: 0
     }
-
     const totalEmissions = filteredResponses.reduce((sum, response) => {
       const emission = parseFloat(response.feed_emission?.toString() || '0') || 0
       return sum + emission
     }, 0)
-
     const averageEmissions = totalEmissions > 0 ? totalEmissions / filteredResponses.length : 0;
-
     return {
       totalEmissions: Math.round(totalEmissions * 100) / 100,
       averageEmissions: Math.round(averageEmissions * 100) / 100
@@ -95,7 +89,6 @@ export default function AdminDashboard() {
       Organization: r.organization_name || '',
       Date: new Date(r.created_at || '').toLocaleDateString()
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Export");
@@ -143,7 +136,6 @@ export default function AdminDashboard() {
               <span className="hidden sm:inline">Back</span>
             </motion.button>
           </motion.div>
-
           <motion.div
             className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-500/30"
             initial={{ scale: 0 }}
@@ -152,7 +144,6 @@ export default function AdminDashboard() {
           >
             <Lock className="w-8 h-8 text-gray-300" />
           </motion.div>
-
           <motion.h1
             className="text-white text-2xl font-bold mb-4 text-center"
             initial={{ opacity: 0, y: -20 }}
@@ -161,7 +152,6 @@ export default function AdminDashboard() {
           >
             Admin Access
           </motion.h1>
-
           <motion.p
             className="text-gray-300 text-center mb-6"
             initial={{ opacity: 0 }}
@@ -170,7 +160,6 @@ export default function AdminDashboard() {
           >
             Enter the admin password to access the dashboard
           </motion.p>
-
           <motion.input
             type="password"
             value={password}
@@ -269,32 +258,24 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* Stats */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <motion.div
-          className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
-        >
+        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Total Records</p>
           <p className="text-3xl font-bold">{totalResponses}</p>
-          {/* --- 4. UPDATE stat card to show selected organization --- */}
           <p className="text-xs text-gray-400 mt-1">
             {selectedOrg === 'all' ? 'All organizations' : `Organization: ${selectedOrg}`}
           </p>
         </motion.div>
-        <motion.div
-          className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
-        >
+        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Unique Feed Types</p>
           <p className="text-3xl font-bold">{Object.keys(responsesByCategory).length}</p>
         </motion.div>
-        <motion.div
-          className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
-        >
+        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Most Common Feed</p>
           <p className="text-3xl font-bold">
             {Object.entries(responsesByCategory).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'}
@@ -302,7 +283,6 @@ export default function AdminDashboard() {
         </motion.div>
       </motion.div>
 
-      {/* Organization Filter */}
       <motion.div
         className="mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -312,7 +292,6 @@ export default function AdminDashboard() {
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <h3 className="text-lg font-semibold mb-4">Filter by Organization</h3>
           <div className="flex flex-wrap gap-2">
-            {/* --- 5. UPDATE filter buttons to use organizations --- */}
             <motion.button
               onClick={() => setSelectedOrg('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedOrg === 'all'
@@ -320,7 +299,7 @@ export default function AdminDashboard() {
                 : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
             >
-              All Organizations
+              All Organizations ({responses.length})
             </motion.button>
             {uniqueOrgs.map(org => (
               <motion.button
@@ -331,7 +310,7 @@ export default function AdminDashboard() {
                   : 'bg-white/10 text-gray-300 hover:bg-white/20'
                   }`}
               >
-                {org} ({responses.filter(r => r.organization_name === org)})
+                {org} ({responses.filter(r => r.organization_name === org).length})
               </motion.button>
             ))}
           </div>
@@ -359,18 +338,11 @@ export default function AdminDashboard() {
             <p className="text-3xl font-bold text-white">{feedStats.totalEmissions.toLocaleString()}</p>
             <p className="text-sm text-orange-200 mt-1">Total emissions across all feeds</p>
           </motion.div>
-          <motion.div
-            className="bg-gradient-to-r from-purple-600/20 to-purple-800/20 p-6 rounded-lg border border-purple-500/20 backdrop-blur-lg"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="w-5 h-5 text-purple-400" />
-              <p className="text-sm text-purple-300 font-medium">Average Emissions</p>
-            </div>
-            <p className="text-3xl font-bold text-white">{feedStats.averageEmissions.toLocaleString()}</p>
-            <p className="text-sm text-purple-200 mt-1">Average emissions per entry</p>
-          </motion.div>
+
         </div>
       </motion.div>
+
+      {/* --- THIS IS THE FIX: The Charts section has been added back --- */}
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         initial={{ opacity: 0, y: 20 }}
@@ -386,12 +358,14 @@ export default function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
               <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={60} />
               <YAxis stroke="#9CA3AF" />
-              <Tooltip />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
+                labelStyle={{ color: '#D1D5DB' }}
+              />
               <Bar dataKey="value" fill="#6B7280" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
-
         <motion.div
           className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
         >
@@ -403,20 +377,24 @@ export default function AdminDashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                outerRadius={80}
+                outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
                 label={({ name, percentage }) => `${name}: ${percentage}%`}
               >
                 {chartData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </motion.div>
       </motion.div>
+
+      {/* Raw Data */}
       <motion.div
         className="mt-10"
         initial={{ opacity: 0, y: 20 }}
@@ -428,8 +406,6 @@ export default function AdminDashboard() {
           <motion.button
             onClick={() => setShowRawData(!showRawData)}
             className="bg-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             {showRawData ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {showRawData ? 'Hide' : 'Show'}
@@ -457,35 +433,23 @@ export default function AdminDashboard() {
                 {filteredResponses
                   .filter(r => r.category === 'feed')
                   .map((r, i) => {
-                    let value = '';
+                    const value = r.value ?? 'N/A';
                     let unit = '';
-                    if (r.value !== undefined) {
-                      value = r.value;
-                    }
                     if (r.tags && Array.isArray(r.tags)) {
-                      unit =
-                        r.tags.find((tag: string) =>
-                          ['gms', 'kg', 'Quintal', 'Tons', 'liters', 'litres'].includes(tag)
-                        ) || '';
+                      unit = r.tags.find((tag: string) => ['gms', 'kg', 'Quintal', 'Tons'].includes(tag)) || '';
                     }
-                    if ((!value || !unit) && r.description && typeof r.description === 'string') {
+                    if (!unit && r.description) {
                       const descMatch = r.description.match(/([\d.]+)\s*([^\s]+)/);
-                      if (descMatch) {
-                        value = value || descMatch[1] || '';
-                        unit = unit || descMatch[2] || '';
-                      }
+                      if (descMatch) { unit = descMatch[2] || ''; }
                     }
-
                     return (
-                      <tr key={i} className="border-b border-white/10">
+                      <tr key={r.id || i} className="border-b border-white/10">
                         <td className="px-6 py-4 text-white font-medium">{r.name || 'N/A'}</td>
-                        <td className="px-6 py-4 text-gray-300">{value || 'N/A'}</td>
+                        <td className="px-6 py-4 text-gray-300">{String(value)}</td>
                         <td className="px-6 py-4 text-gray-300">{unit || 'N/A'}</td>
                         <td className="px-6 py-4">
                           <span className="px-2 py-1 rounded-full text-xs bg-orange-900/20 text-orange-400 border border-orange-500/20">
-                            {r.feed_emission !== undefined
-                              ? parseFloat(r.feed_emission).toFixed(4)
-                              : '0.0000'}
+                            {r.feed_emission !== undefined ? parseFloat(r.feed_emission).toFixed(4) : '0.0000'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -498,16 +462,7 @@ export default function AdminDashboard() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-gray-300">
-                          {r.created_at
-                            ? new Date(r.created_at).toLocaleDateString('en-GB', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
-                            : 'N/A'
-                          }
+                          {r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A'}
                         </td>
                       </tr>
                     );
