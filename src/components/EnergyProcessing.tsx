@@ -172,7 +172,7 @@ export default function EnergyProcessing() {
           tags: [row.facility.toLowerCase().replace(/\s+/g, '_'), row.energyType.toLowerCase().replace(/\s+/g, '_'), row.unit],
           priority: 'medium',
           user_email: userEmail,
-          username: userProfile?.username || null,
+
           organization_name: userProfile?.organization_name || null
         }
       })

@@ -48,7 +48,6 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
-  // --- 1. ADDED state back for the admin button ---
   const [showAdminAccess, setShowAdminAccess] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
@@ -86,6 +85,7 @@ export default function AuthPage() {
     return () => subscription.unsubscribe();
   }, [navigate, location.search]);
 
+  // --- THIS IS THE FIX: The 'login' logic is updated ---
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -96,7 +96,7 @@ export default function AuthPage() {
         if (formData.password !== formData.confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        if (!formData.organizationName || !formData.state || !formData.country) {
+        if (!formData.organizationName || !formData.state || !formData.country || !formData.emailOrUsername) {
           throw new Error('Please fill out all required fields.');
         }
 
@@ -111,26 +111,38 @@ export default function AuthPage() {
             }
           }
         });
-
         if (error) throw error;
-
         localStorage.setItem('pendingUserProfile', JSON.stringify({
           organization_name: formData.organizationName,
           state: formData.state,
           country: formData.country,
           email: formData.emailOrUsername
         }));
-
         setMessage('Check your email for verification link!');
         setMessageType('success');
 
       } else if (authMode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.emailOrUsername,
+        if (!formData.organizationName || !formData.password) {
+          throw new Error('Please select an organization and enter your password.');
+        }
+        // Step 1: Look up the user's email using their organization name.
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('organization_name', formData.organizationName)
+          .single();
+
+        if (profileError || !profile) {
+          throw new Error('Invalid organization or password.');
+        }
+        // Step 2: Use the found email to sign in.
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: profile.email,
           password: formData.password
         });
-        if (error) throw error;
+        if (signInError) throw signInError;
         navigate('/form');
+
       } else if (authMode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(formData.emailOrUsername, {
           redirectTo: `${window.location.origin}/reset-password`
@@ -142,15 +154,11 @@ export default function AuthPage() {
     } catch (error) {
       let errorMessage = 'An error occurred';
       if (error instanceof Error) {
-        if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
+        if (error.message.includes('User already registered')) {
           setAuthMode('login');
-          errorMessage = 'This email is already registered. Please sign in with your existing account.';
+          errorMessage = 'This email is already registered. Please sign in.';
         } else if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password.';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please confirm your email before signing in.';
-        } else if (error.message.includes('Too many requests')) {
-          errorMessage = 'Too many login attempts. Please wait.';
+          errorMessage = 'Invalid organization or password.';
         } else {
           errorMessage = error.message;
         }
@@ -162,7 +170,6 @@ export default function AuthPage() {
     }
   };
 
-  // --- 2. ADDED the click handler function back ---
   const handleLogoClick = () => {
     setClickCount(prev => prev + 1);
     if (clickCount >= 4) {
@@ -189,7 +196,7 @@ export default function AuthPage() {
             <div className="w-7"></div>
             <motion.h1
               className="text-3xl font-bold text-white"
-              onClick={handleLogoClick} // Attached the click handler here
+              onClick={handleLogoClick}
             >
               {authMode === 'login' ? 'Welcome Back' :
                 authMode === 'signup' ? 'Create Account' :
@@ -205,7 +212,6 @@ export default function AuthPage() {
               <Home className="w-7 h-7" />
             </motion.button>
           </div>
-
           <motion.p className="text-gray-300 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
             {authMode === 'signup' && 'Join our data platform'}
@@ -213,7 +219,6 @@ export default function AuthPage() {
           </motion.p>
         </div>
 
-        {/* --- 3. ADDED the hidden admin button JSX back --- */}
         <AnimatePresence>
           {showAdminAccess && (
             <motion.div
@@ -246,62 +251,80 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-6">
-          {(authMode === 'login' || authMode === 'signup') && (
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <select
-                value={formData.organizationName}
-                onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                required
-                className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-              >
-                <option value="" disabled className="bg-gray-800 text-gray-300">Select Organization</option>
-                {organizationOptions.map(org => (
-                  <option key={org} value={org} className="bg-gray-800 text-white">
-                    {org}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-            </div>
-          )}
-          {/* Email Input */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="email"
-              value={formData.emailOrUsername}
-              onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
-              placeholder="Enter your email"
-              required
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
-            />
-          </div>
-
-
-          {authMode !== 'forgot' && (
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Password"
-                required
-                className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
-            </div>
+          {/* LOGIN MODE FIELDS */}
+          {authMode === 'login' && (
+            <>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select
+                  value={formData.organizationName}
+                  onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                  required
+                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>Select Organization</option>
+                  {organizationOptions.map(org => (<option key={org} value={org} className="bg-gray-800">{org}</option>))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Password"
+                  required
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
+            </>
           )}
 
+          {/* SIGN UP MODE FIELDS */}
           {authMode === 'signup' && (
             <>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <select
+                  value={formData.organizationName}
+                  onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                  required
+                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>Select Organization</option>
+                  {organizationOptions.map(org => (<option key={org} value={org} className="bg-gray-800">{org}</option>))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  value={formData.emailOrUsername}
+                  onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
+                  placeholder="Enter your email"
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+                />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Password"
+                  required
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -310,28 +333,22 @@ export default function AuthPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
                 />
               </div>
-
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <select
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   required
-                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/20 rounded-lg text-white appearance-none cursor-pointer"
                 >
-                  <option value="" disabled className="bg-gray-800 text-gray-300">Select State</option>
-                  {indianStates.map(state => (
-                    <option key={state} value={state} className="bg-gray-800 text-white">
-                      {state}
-                    </option>
-                  ))}
+                  <option value="" disabled>Select State</option>
+                  {indianStates.map(state => (<option key={state} value={state} className="bg-gray-800">{state}</option>))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
               </div>
-
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -340,10 +357,25 @@ export default function AuthPage() {
                   required
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
                 />
               </div>
             </>
+          )}
+
+          {/* FORGOT PASSWORD MODE FIELD */}
+          {authMode === 'forgot' && (
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="email"
+                value={formData.emailOrUsername}
+                onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
+                placeholder="Enter your email"
+                required
+                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white"
+              />
+            </div>
           )}
 
           <button
@@ -375,7 +407,6 @@ export default function AuthPage() {
               </div>
             </>
           )}
-
           {authMode === 'signup' && (
             <div>
               Already have an account?{' '}
@@ -384,7 +415,6 @@ export default function AuthPage() {
               </button>
             </div>
           )}
-
           {authMode === 'forgot' && (
             <button onClick={() => setAuthMode('login')} className="text-white hover:underline">
               Back to Sign in

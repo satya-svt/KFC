@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { supabase, getCurrentUserEmail, getUserProfile } from '../lib/supabase'
-import { autoSaveFormData, loadAutoSavedData, clearAutoSavedData, saveFormDataImmediately } from '../lib/autoSave'
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { supabase, getCurrentUserEmail, getUserProfile } from '../lib/supabase';
+import { autoSaveFormData, loadAutoSavedData, clearAutoSavedData, saveFormDataImmediately } from '../lib/autoSave';
 import {
   Send,
   CheckCircle,
@@ -10,8 +10,8 @@ import {
   ChevronDown,
   Truck,
   Plus,
-  Home // Added Home icon
-} from 'lucide-react'
+  Home
+} from 'lucide-react';
 
 const vehicleTypeOptions = [
   'LGV ( < 3.5 tons ) - Diesel',
@@ -28,131 +28,133 @@ const vehicleTypeOptions = [
   'Van - Diesel',
   'Van - Petrol',
   'Van - Electric'
-]
+];
 
 const routeOptions = [
   'Feed Mill',
   'Hatchery to Farm',
   'Farm to Processing',
   'Processing to Delivery'
-]
+];
 
 interface TransportRow {
-  route: string
-  vehicleType: string
-  distance: string
+  route: string;
+  vehicleType: string;
+  distance: string;
 }
 
 export default function Transport() {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate = useNavigate();
+  const location = useLocation();
   const [transportRows, setTransportRows] = useState<TransportRow[]>([
     { route: 'Feed Mill', vehicleType: '', distance: '' }
-  ])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [userProfile, setUserProfile] = useState<{ organization_name?: string | null, username?: string | null } | null>(null)
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [userProfile, setUserProfile] = useState<{ organization_name?: string | null, username?: string | null } | null>(null);
 
-  const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true)
+  const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true);
 
-  const entryId = 'entry_1' // For now, using default entry
+  const entryId = 'entry_1';
 
-  // Load user profile on component mount
   React.useEffect(() => {
     const loadUserProfile = async () => {
-      const profile = getUserProfile()
-      setUserProfile(profile)
+      const profile = getUserProfile();
+      setUserProfile(profile);
 
-      // Load auto-saved data
       try {
-        const savedData = await loadAutoSavedData('transport', entryId)
+        const savedData = await loadAutoSavedData('transport', entryId);
         if (savedData && Array.isArray(savedData)) {
-          setTransportRows(savedData)
+          setTransportRows(savedData);
         }
       } catch (error) {
-        console.error('Error loading auto-saved data:', error)
+        console.error('Error loading auto-saved data:', error);
       } finally {
-        setIsLoadingAutoSave(false)
+        setIsLoadingAutoSave(false);
       }
-    }
-    loadUserProfile()
-  }, [])
+    };
+    loadUserProfile();
+  }, []);
 
-  // Save data when navigating away
   React.useEffect(() => {
     const handleBeforeUnload = () => {
-      const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance)
+      const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance);
       if (hasData) {
-        saveFormDataImmediately('transport', transportRows, entryId)
+        saveFormDataImmediately('transport', transportRows, entryId);
       }
-    }
+    };
 
     const unlisten = () => {
-      handleBeforeUnload()
-    }
+      handleBeforeUnload();
+    };
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      unlisten()
-    }
-  }, [transportRows, entryId])
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      unlisten();
+    };
+  }, [transportRows, entryId]);
 
-  // Auto-save functionality
   React.useEffect(() => {
     if (!isLoadingAutoSave && transportRows.length > 0) {
-      // Only auto-save if there's meaningful data
-      const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance)
+      const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance);
       if (hasData) {
-        autoSaveFormData('transport', transportRows, entryId)
+        autoSaveFormData('transport', transportRows, entryId);
       }
     }
-  }, [transportRows, isLoadingAutoSave])
+  }, [transportRows, isLoadingAutoSave]);
 
+  // --- THIS IS THE FIX ---
+  // The logic now strips any non-digit characters from the input value.
   const updateTransportRow = (index: number, field: keyof TransportRow, value: string) => {
+    let processedValue = value;
+    if (field === 'distance') {
+      // This removes any character that is not a digit (0-9)
+      processedValue = value.replace(/\D/g, '');
+    }
     setTransportRows(prev => prev.map((row, i) =>
-      i === index ? { ...row, [field]: value } : row
-    ))
-  }
+      i === index ? { ...row, [field]: processedValue } : row
+    ));
+  };
 
   const handleAddEntry = () => {
     setTransportRows(prev => [
       ...prev,
       { route: '', vehicleType: '', distance: '' }
-    ])
-  }
+    ]);
+  };
 
   const handleRemoveEntry = (index: number) => {
-    setTransportRows(prev => prev.filter((_, i) => i !== index))
-  }
+    setTransportRows(prev => prev.filter((_, i) => i !== index));
+  };
 
   const isFormValid = transportRows.every(row =>
     row.route && row.vehicleType && row.distance
-  )
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (isSubmitting) return
+    if (isSubmitting) return;
 
     if (!isFormValid) {
-      setErrorMessage('Please complete all transport fields.')
-      setSubmitStatus('error')
-      return
+      setErrorMessage('Please complete all transport fields.');
+      setSubmitStatus('error');
+      return;
     }
 
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
-    setErrorMessage('')
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
     try {
-      const userEmail = await getCurrentUserEmail()
-      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
+      const userEmail = await getCurrentUserEmail();
+      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.');
 
       const dataToInsert = transportRows.map(row => {
-        const distance = parseFloat(row.distance.replace(/,/g, '')) || 0
+        const distance = parseFloat(row.distance.replace(/,/g, '')) || 0;
 
         return {
           name: `${row.route} - ${row.vehicleType}`,
@@ -163,29 +165,27 @@ export default function Transport() {
           tags: [row.route.toLowerCase().replace(/\s+/g, '_'), row.vehicleType.toLowerCase().replace(/\s+/g, '_'), 'transport'],
           priority: 'medium',
           user_email: userEmail,
-          username: userProfile?.username || null,
+
           organization_name: userProfile?.organization_name || null
-        }
-      })
+        };
+      });
 
-      const { error } = await supabase.from('data_rows').insert(dataToInsert)
-      if (error) throw error
+      const { error } = await supabase.from('data_rows').insert(dataToInsert);
+      if (error) throw error;
 
-      // Clear auto-saved data after successful submission
-      await clearAutoSavedData('transport', entryId)
+      await clearAutoSavedData('transport', entryId);
 
-      setSubmitStatus('success')
+      setSubmitStatus('success');
 
     } catch (error) {
-      console.error('Error submitting transport data:', error)
-      setSubmitStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Error submitting transport data:', error);
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  // Show loading state while loading auto-saved data
   if (isLoadingAutoSave) {
     return (
       <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
@@ -198,7 +198,7 @@ export default function Transport() {
           <p className="text-white text-xl">Loading your saved data...</p>
         </motion.div>
       </motion.div>
-    )
+    );
   }
 
   if (submitStatus === 'success') {
@@ -209,7 +209,6 @@ export default function Transport() {
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-
             <p className="text-gray-300 mb-6">Transport data has been submitted</p>
             <div className="space-y-4">
               <motion.button
@@ -220,8 +219,6 @@ export default function Transport() {
               >
                 Review & Download Submission
               </motion.button>
-
-              {/* --- UPDATED THIS BUTTON --- */}
               <motion.button
                 onClick={() => navigate('/')}
                 className="w-full flex items-center justify-center gap-2 bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-300"
@@ -231,12 +228,11 @@ export default function Transport() {
                 <Home className="w-5 h-5" />
                 Exit to Home Page
               </motion.button>
-
             </div>
           </div>
         </motion.div>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -261,7 +257,6 @@ export default function Transport() {
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Instructions */}
           <motion.div
             className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6"
             initial={{ opacity: 0, y: -10 }}
@@ -283,7 +278,6 @@ export default function Transport() {
             </div>
           </motion.div>
 
-          {/* Transport Table */}
           <motion.div
             className="bg-white/5 border border-white/10 rounded-lg overflow-hidden relative"
             initial={{ opacity: 0, y: 20 }}
@@ -378,7 +372,6 @@ export default function Transport() {
                   </table>
                 </React.Fragment>
               ))}
-              {/* New Entry Button at bottom-right */}
               <div className="absolute bottom-6 left-6 z-10">
                 <motion.button
                   type="button"
@@ -387,14 +380,12 @@ export default function Transport() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-
                   + New Entry
                 </motion.button>
               </div>
             </div>
           </motion.div>
 
-          {/* Summary */}
           {isFormValid && (
             <motion.div
               className="bg-green-500/10 border border-green-500/20 rounded-lg p-4"
@@ -451,5 +442,5 @@ export default function Transport() {
         </form>
       </motion.div>
     </motion.div>
-  )
+  );
 }

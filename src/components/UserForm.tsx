@@ -142,6 +142,8 @@ export default function UserForm() {
         row.feed_type && row.quantity && row.unit
       )
 
+      // --- THIS IS THE FIX ---
+      // Removed the non-existent 'status', 'tags', and 'priority' fields
       const dataToInsert = validRows.map(row => {
         const quantity = parseFloat(row.quantity.toString()) || 0
         const feedEmission = calculateFeedEmission(quantity, row.feed_type)
@@ -150,11 +152,8 @@ export default function UserForm() {
           description: `${row.quantity} ${row.unit}`,
           category: 'feed',
           value: quantity,
-          status: 'active',
-          tags: [row.feed_type, row.unit],
-          priority: 'medium',
           user_email: userEmail,
-          username: userProfile?.username || null,
+
           organization_name: userProfile?.organization_name || null,
           feed_emission: feedEmission
         }
@@ -265,7 +264,6 @@ export default function UserForm() {
             </div>
           </motion.div>
 
-          {/* --- 1. UPDATED Column Headers Order --- */}
           <motion.div
             className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"
             initial={{ opacity: 0, y: -20 }}
@@ -329,9 +327,7 @@ export default function UserForm() {
                     )
                   )}
                 </div>
-                {/* --- 2. UPDATED Input Rows Order --- */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {/* Feed Type Select */}
                   <div className="relative">
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                     <select
@@ -345,7 +341,6 @@ export default function UserForm() {
                     </select>
                   </div>
 
-                  {/* Unit Select */}
                   <div className="relative">
                     <Weight className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
@@ -360,7 +355,6 @@ export default function UserForm() {
                     </select>
                   </div>
 
-                  {/* Quantity Input */}
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input

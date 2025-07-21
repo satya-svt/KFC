@@ -153,7 +153,7 @@ export default function ManureManagement() {
         tags: [system.systemType, 'manure_management'],
         priority: 'medium',
         user_email: userEmail,
-        username: userProfile?.username || null,
+
         organization_name: userProfile?.organization_name || null
       }))
 
