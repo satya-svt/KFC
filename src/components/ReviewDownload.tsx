@@ -165,7 +165,6 @@ export default function ReviewDownload() {
     }, 0);
   }, [allData.feed]);
 
-  // --- 1. NEW CALCULATION for the total transport distance in KMs ---
   const totalTransportInKms = useMemo(() => {
     if (!allData.transport || !Array.isArray(allData.transport)) {
       return 0;
@@ -204,7 +203,9 @@ export default function ReviewDownload() {
     switch (type) {
       case 'feed': return data.map((item, index) => ({ 'S.no': index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
       case 'manure': return data.map((item, index) => ({ 'S.no': index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
-      case 'energy': return data.map((item, index) => ({ 'S.no': index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
+      // --- THIS IS THE ONLY CHANGE ---
+      // Added a .sort() method to order the energy data by 'energyType' before it's displayed.
+      case 'energy': return data.sort((a, b) => (a.energyType || '').localeCompare(b.energyType || '')).map((item, index) => ({ 'S.no': index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
       case 'waste': return data.map((item, index) => ({ 'S.no': index + 1, wasteWater: item.wasteWaterTreated || 'N/A', oxygenDemand: item.oxygenDemand || 'N/A', etp: item.etp || 'N/A', treatmentType: item.waterTreatmentType || 'N/A' }));
       case 'transport': return data.map((item, index) => ({ 'S.no': index + 1, route: item.route || 'N/A', vehicleType: item.vehicleType || 'N/A', distance: item.distance || 'N/A' }));
       default: return [];
@@ -368,7 +369,6 @@ export default function ReviewDownload() {
                               <td className="py-3 px-3 text-white font-bold">KGs</td>
                             </tr>
                           )}
-                          {/* --- 3. NEW "Total" row added for the TRANSPORT section --- */}
                           {section.key === 'transport' && section.data.length > 0 && (
                             <tr className="border-t-2 border-white/20">
                               <td className="py-3 px-3 text-white font-bold" colSpan={3}>Total Distance</td>
@@ -396,7 +396,14 @@ export default function ReviewDownload() {
                     <FileText className="w-5 h-5 text-red-400" />
                     <span>Download as PDF</span>
                   </button>
-
+                  <button onClick={() => handleDownload('csv')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
+                    <FileText className="w-5 h-5 text-green-400" />
+                    <span>Download as CSV</span>
+                  </button>
+                  <button onClick={() => handleDownload('xlsx')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-400" />
+                    <span>Download as Excel</span>
+                  </button>
                 </div>
               </motion.div>
             </div>
