@@ -245,7 +245,7 @@ export default function ReviewDownload() {
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Review & Download Your Submission</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">Review Submission</h1>
               <p className="text-gray-300">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
             <motion.div
@@ -396,14 +396,7 @@ export default function ReviewDownload() {
                     <FileText className="w-5 h-5 text-red-400" />
                     <span>Download as PDF</span>
                   </button>
-                  <button onClick={() => handleDownload('csv')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
-                    <FileText className="w-5 h-5 text-green-400" />
-                    <span>Download as CSV</span>
-                  </button>
-                  <button onClick={() => handleDownload('xlsx')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
-                    <FileText className="w-5 h-5 text-blue-400" />
-                    <span>Download as Excel</span>
-                  </button>
+
                 </div>
               </motion.div>
             </div>
