@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react' // Added useMemo for calculation
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getAllAutoSavedData } from '../lib/autoSave'
@@ -25,7 +25,6 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 
-// --- 1. NEW HELPER FUNCTION to convert units to KGs ---
 const convertToKgs = (quantity: number, unit: string): number => {
   switch (unit?.toLowerCase()) {
     case 'tons':
@@ -156,7 +155,6 @@ export default function ReviewDownload() {
     loadData()
   }, [entryId])
 
-  // --- 2. NEW CALCULATION for the total feed quantity in KGs ---
   const totalFeedInKgs = useMemo(() => {
     if (!allData.feed || !Array.isArray(allData.feed)) {
       return 0;
@@ -166,6 +164,17 @@ export default function ReviewDownload() {
       return total + convertToKgs(quantity, item.unit);
     }, 0);
   }, [allData.feed]);
+
+  // --- 1. NEW CALCULATION for the total transport distance in KMs ---
+  const totalTransportInKms = useMemo(() => {
+    if (!allData.transport || !Array.isArray(allData.transport)) {
+      return 0;
+    }
+    return allData.transport.reduce((total, item) => {
+      const distance = parseFloat(item.distance) || 0;
+      return total + distance;
+    }, 0);
+  }, [allData.transport]);
 
   const handleDownload = async (format: 'pdf' | 'csv' | 'xlsx') => {
     setDownloading(format)
@@ -352,12 +361,18 @@ export default function ReviewDownload() {
                               ))}
                             </tr>
                           ))}
-                          {/* --- 3. NEW "Total" row added specifically for the FEED section --- */}
                           {section.key === 'feed' && section.data.length > 0 && (
                             <tr className="border-t-2 border-white/20">
                               <td className="py-3 px-3 text-white font-bold" colSpan={2}>Total</td>
                               <td className="py-3 px-3 text-white font-bold">{totalFeedInKgs.toFixed(2)}</td>
                               <td className="py-3 px-3 text-white font-bold">KGs</td>
+                            </tr>
+                          )}
+                          {/* --- 3. NEW "Total" row added for the TRANSPORT section --- */}
+                          {section.key === 'transport' && section.data.length > 0 && (
+                            <tr className="border-t-2 border-white/20">
+                              <td className="py-3 px-3 text-white font-bold" colSpan={3}>Total Distance</td>
+                              <td className="py-3 px-3 text-white font-bold">{totalTransportInKms.toFixed(2)} KMs</td>
                             </tr>
                           )}
                         </tbody>
