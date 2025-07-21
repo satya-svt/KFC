@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react' // Added useMemo for calculation
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getAllAutoSavedData } from '../lib/autoSave'
@@ -24,6 +24,22 @@ import {
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
+
+// --- 1. NEW HELPER FUNCTION to convert units to KGs ---
+const convertToKgs = (quantity: number, unit: string): number => {
+  switch (unit?.toLowerCase()) {
+    case 'tons':
+      return quantity * 1000;
+    case 'quintal':
+      return quantity * 100;
+    case 'kg':
+      return quantity;
+    case 'gms':
+      return quantity / 1000;
+    default:
+      return 0;
+  }
+};
 
 function getFlattenedResponses(allData: Record<string, any>) {
   const result: any[] = []
@@ -140,6 +156,17 @@ export default function ReviewDownload() {
     loadData()
   }, [entryId])
 
+  // --- 2. NEW CALCULATION for the total feed quantity in KGs ---
+  const totalFeedInKgs = useMemo(() => {
+    if (!allData.feed || !Array.isArray(allData.feed)) {
+      return 0;
+    }
+    return allData.feed.reduce((total, item) => {
+      const quantity = parseFloat(item.quantity) || 0;
+      return total + convertToKgs(quantity, item.unit);
+    }, 0);
+  }, [allData.feed]);
+
   const handleDownload = async (format: 'pdf' | 'csv' | 'xlsx') => {
     setDownloading(format)
     setShowDownloadMenu(false)
@@ -166,11 +193,11 @@ export default function ReviewDownload() {
   const formatDataForDisplay = (data: any[], type: string) => {
     if (!data || !Array.isArray(data)) return []
     switch (type) {
-      case 'feed': return data.map((item, index) => ({ entry: index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
-      case 'manure': return data.map((item, index) => ({ entry: index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
-      case 'energy': return data.map((item, index) => ({ entry: index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
-      case 'waste': return data.map((item, index) => ({ entry: index + 1, wasteWater: item.wasteWaterTreated || 'N/A', oxygenDemand: item.oxygenDemand || 'N/A', etp: item.etp || 'N/A', treatmentType: item.waterTreatmentType || 'N/A' }));
-      case 'transport': return data.map((item, index) => ({ entry: index + 1, route: item.route || 'N/A', vehicleType: item.vehicleType || 'N/A', distance: item.distance || 'N/A' }));
+      case 'feed': return data.map((item, index) => ({ 'S.no': index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
+      case 'manure': return data.map((item, index) => ({ 'S.no': index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
+      case 'energy': return data.map((item, index) => ({ 'S.no': index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
+      case 'waste': return data.map((item, index) => ({ 'S.no': index + 1, wasteWater: item.wasteWaterTreated || 'N/A', oxygenDemand: item.oxygenDemand || 'N/A', etp: item.etp || 'N/A', treatmentType: item.waterTreatmentType || 'N/A' }));
+      case 'transport': return data.map((item, index) => ({ 'S.no': index + 1, route: item.route || 'N/A', vehicleType: item.vehicleType || 'N/A', distance: item.distance || 'N/A' }));
       default: return [];
     }
   }
@@ -198,7 +225,6 @@ export default function ReviewDownload() {
         transition={{ duration: 0.5 }}
       >
         {!showReview ? (
-          // Main Review & Download Page
           <>
             <motion.div
               className="text-center mb-8"
@@ -212,7 +238,6 @@ export default function ReviewDownload() {
               <h1 className="text-3xl font-bold text-white mb-2">Review & Download Your Submission</h1>
               <p className="text-gray-300">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
-
             <motion.div
               className="bg-white/5 border border-white/10 rounded-lg p-6 mb-6"
               initial={{ opacity: 0, y: 20 }}
@@ -236,7 +261,6 @@ export default function ReviewDownload() {
                 </div>
               </div>
             </motion.div>
-
             <motion.div
               className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -251,7 +275,6 @@ export default function ReviewDownload() {
                 ({completedSections.length} of 5 sections completed)
               </p>
             </motion.div>
-
             <div className="space-y-4">
               <motion.button
                 onClick={() => setShowReview(true)}
@@ -265,7 +288,6 @@ export default function ReviewDownload() {
                 <Eye className="w-5 h-5" />
                 <span>Review Your Submission</span>
               </motion.button>
-
               <motion.button
                 onClick={() => navigate('/')}
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
@@ -280,7 +302,6 @@ export default function ReviewDownload() {
             </div>
           </>
         ) : (
-          // Review Page
           <>
             <motion.div
               className="flex items-center justify-between mb-6"
@@ -299,7 +320,6 @@ export default function ReviewDownload() {
               <h2 className="text-2xl font-bold text-white">Submission Review</h2>
               <div></div>
             </motion.div>
-
             <div className="space-y-6 max-h-96 overflow-y-auto">
               {completedSections.map((section, index) => {
                 const Icon = section.icon;
@@ -314,17 +334,13 @@ export default function ReviewDownload() {
                     <div className="flex items-center space-x-3 mb-4">
                       <Icon className={`w-6 h-6 ${section.color}`} />
                       <h3 className="text-xl font-semibold text-white">{section.title}</h3>
-
                     </div>
-
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-white/10">
                             {section.headers.map(header => (
-                              <th key={header} className="text-left py-2 px-3 text-gray-300 font-medium">
-                                {header}
-                              </th>
+                              <th key={header} className="text-left py-2 px-3 text-gray-300 font-medium">{header}</th>
                             ))}
                           </tr>
                         </thead>
@@ -332,21 +348,24 @@ export default function ReviewDownload() {
                           {section.data.map((row, rowIndex) => (
                             <tr key={rowIndex} className="border-b border-white/5">
                               {Object.values(row).map((value, cellIndex) => (
-                                <td key={cellIndex} className="py-2 px-3 text-white">
-                                  {String(value)}
-                                </td>
+                                <td key={cellIndex} className="py-2 px-3 text-white">{String(value)}</td>
                               ))}
                             </tr>
                           ))}
+                          {/* --- 3. NEW "Total" row added specifically for the FEED section --- */}
+                          {section.key === 'feed' && section.data.length > 0 && (
+                            <tr className="border-t-2 border-white/20">
+                              <td className="py-3 px-3 text-white font-bold" colSpan={2}>Total</td>
+                              <td className="py-3 px-3 text-white font-bold">{totalFeedInKgs.toFixed(2)}</td>
+                              <td className="py-3 px-3 text-white font-bold">KGs</td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
                   </motion.div>
                 );
               })}
-
-              {/* --- THIS IS THE FIX --- */}
-              {/* The download options are now in their own styled section */}
               <motion.div
                 className="bg-white/5 border border-white/10 rounded-lg p-6 mt-6"
                 initial={{ opacity: 0, y: 20 }}
@@ -358,10 +377,7 @@ export default function ReviewDownload() {
                   <h3 className="text-xl font-semibold text-white">Download Submission</h3>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button
-                    onClick={() => handleDownload('pdf')}
-                    className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg"
-                  >
+                  <button onClick={() => handleDownload('pdf')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
                     <FileText className="w-5 h-5 text-red-400" />
                     <span>Download as PDF</span>
                   </button>
