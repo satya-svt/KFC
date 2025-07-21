@@ -387,7 +387,7 @@ export default function AuthPage() {
             type="submit"
             disabled={loading}
             // --- THEME CHANGE: Button is now a prominent dark color ---
-            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg flex justify-center items-center space-x-2"
+            className="w-full bg-gray-400 hover:bg-gray-00 text-white font-semibold py-3 rounded-lg flex justify-center items-center space-x-2"
           >
             {loading ? <Loader2 className="animate-spin" /> : null}
             <span>
@@ -417,7 +417,7 @@ export default function AuthPage() {
             <div>
               Already have an account?{' '}
               <button onClick={() => setAuthMode('login')} className="text-gray-800 font-semibold hover:underline">
-                Sign in
+                Sign In
               </button>
             </div>
           )}
