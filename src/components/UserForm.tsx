@@ -174,42 +174,31 @@ export default function UserForm() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading your saved data...</p>
-        </motion.div>
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
   }
 
   if (submitStatus === 'success') {
     return (
-      <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
-        <motion.div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+        <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-400" />
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <p className="text-gray-300 mb-6">Feed data has been submitted</p>
+            <p className="text-gray-600 mb-6">Feed data has been submitted</p>
             <div className="space-y-4">
               <motion.button
                 onClick={() => navigate('/manure')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
               >
                 Continue to Manure Management
               </motion.button>
               <motion.button
                 onClick={() => navigate('/')}
-                className="w-full flex items-center justify-center gap-2 bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg"
               >
                 <Home className="w-5 h-5" />
                 Exit to Home Page
@@ -223,10 +212,10 @@ export default function UserForm() {
 
   return (
     // --- THEME CHANGE: Main container background ---
-    <motion.div className="min-h-screen bg-stone-800 flex items-center justify-center p-4">
-      {/* --- THEME CHANGE: Form container background and border --- */}
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+      {/* --- THEME CHANGE: Form container styling --- */}
       <motion.div
-        className="max-w-full w-full bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-10 shadow-2xl"
+        className="max-w-full w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -238,28 +227,28 @@ export default function UserForm() {
           transition={{ delay: 0.1 }}
         >
           {/* --- THEME CHANGE: Header text --- */}
-          <h1 className="text-3xl font-bold text-amber-50 mb-2">FEED</h1>
-          <p className="text-stone-400">Please enter feed information below</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">FEED</h1>
+          <p className="text-gray-600">Please enter feed information below</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* --- THEME CHANGE: Instructions box --- */}
           <motion.div
-            className="bg-amber-900/20 border border-amber-500/20 rounded-lg p-4 mb-6"
+            className="bg-gray-300 border border-gray-300 rounded-lg p-4 mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-amber-500/20 rounded-full flex items-center justify-center mt-0.5">
-                <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+              <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center mt-0.5">
+                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
               </div>
               <div>
-                <p className="text-amber-200 text-sm font-medium mb-1">How to fill the form:</p>
-                <ul className="text-amber-300/80 text-sm space-y-1">
-                  <li>• <strong>First row is required</strong> - fill feed type, quantity, and unit</li>
-                  <li>• Click "New Entry" to add more feed entries as needed</li>
-                  <li>• Remove any extra rows you don't need</li>
+                <p className="text-gray-700 text-sm font-medium mb-1">How to fill the form:</p>
+                <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                  <li><strong>First row is required</strong> - fill feed type, quantity, and unit</li>
+                  <li>Click "New Entry" to add more feed entries as needed</li>
+                  <li>Remove any extra rows you don't need</li>
                 </ul>
               </div>
             </div>
@@ -273,16 +262,16 @@ export default function UserForm() {
           >
             <div className="text-center">
               {/* --- THEME CHANGE: Column header text --- */}
-              <h3 className="text-lg font-semibold text-stone-200 mb-2">Feed Type</h3>
-              <p className="text-stone-400 text-sm">Select type of feed given to poultry</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Feed Type</h3>
+              <p className="text-gray-500 text-sm">Select type of feed given to poultry</p>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-stone-200 mb-2">Unit</h3>
-              <p className="text-stone-400 text-sm">Select weight unit</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Unit</h3>
+              <p className="text-gray-500 text-sm">Select weight unit</p>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-stone-200 mb-2">Quantity</h3>
-              <p className="text-stone-400 text-sm">Enter quantity (numbers only)</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Quantity</h3>
+              <p className="text-gray-500 text-sm">Enter quantity (numbers only)</p>
             </div>
           </motion.div>
 
@@ -291,9 +280,9 @@ export default function UserForm() {
               <motion.div
                 key={index}
                 // --- THEME CHANGE: Conditional borders for input rows ---
-                className={`bg-stone-900/30 border rounded-lg p-4 transition-all duration-300 ${index === 0
-                  ? (isFirstRowComplete ? 'border-green-500/30 bg-green-900/10' : 'border-red-500/30 bg-red-900/10')
-                  : (row.feed_type && row.quantity && row.unit ? 'border-green-500/20 bg-green-900/10 hover:bg-green-900/20' : 'border-stone-700 hover:bg-stone-800/40')
+                className={`bg-white border rounded-lg p-4 transition-all duration-300 ${index === 0
+                  ? (isFirstRowComplete ? 'border-gray-200 bg-white' : 'border-gray-400 bg-gray-200')
+                  : (row.feed_type && row.quantity && row.unit ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:bg-gray-50')
                   }`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -301,17 +290,17 @@ export default function UserForm() {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-stone-200 font-medium">Feed Entry {index + 1}</h4>
-                    {isFirstRowComplete && index === 0 && (<CheckCircle className="w-4 h-4 text-green-400" />)}
+                    <h4 className="text-gray-700 font-medium">Feed Entry {index + 1}</h4>
+                    {isFirstRowComplete && index === 0 && (<CheckCircle className="w-4 h-4 text-green-600" />)}
                   </div>
                   {index === 0 ? (
-                    <span className="text-xs bg-red-800/50 text-red-300 px-2 py-1 rounded-full border border-red-500/30">Required</span>
+                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full border border-red-300">Required</span>
                   ) : (
                     (feedRows.length > 1) && (
                       <motion.button
                         type="button"
                         onClick={() => handleRemoveEntry(index)}
-                        className="text-red-400 hover:text-red-300 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded border border-red-500/20 transition-all duration-300"
+                        className="text-red-600 hover:text-red-800 text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded border border-red-300 transition-all"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -322,40 +311,40 @@ export default function UserForm() {
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="relative">
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                     <select
                       value={row.feed_type}
                       onChange={(e) => updateFeedRow(index, 'feed_type', e.target.value)}
                       // --- THEME CHANGE: Select input fields ---
-                      className={`w-full px-4 py-3 bg-stone-800/50 border rounded-lg text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 appearance-none cursor-pointer hover:bg-stone-700/50 ${row.feed_type ? 'border-green-500/30' : 'border-stone-600'}`}
+                      className={`w-full px-4 py-3 bg-gray-200 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100 ${row.feed_type ? 'border-gray-200' : 'border-gray-300'}`}
                       required={index === 0}
                     >
-                      <option value="" className="bg-stone-900 text-gray-400">{index === 0 ? "Select feed type" : "Select feed type (optional)"}</option>
-                      {feedOptions.map(option => (<option key={option} value={option} className="bg-stone-800 text-stone-200 hover:bg-amber-600">{option}</option>))}
+                      <option value="" className="text-gray-500">{index === 0 ? "Select feed type" : "Select feed type (optional)"}</option>
+                      {feedOptions.map(option => (<option key={option} value={option} className="text-gray-800">{option}</option>))}
                     </select>
                   </div>
 
                   <div className="relative">
-                    <Weight className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5" />
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5 pointer-events-none" />
+                    <Weight className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
                     <select
                       value={row.unit}
                       onChange={(e) => updateFeedRow(index, 'unit', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-stone-800/50 border rounded-lg text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer ${row.unit ? 'border-green-500/30' : 'border-stone-600'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-200 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all appearance-none cursor-pointer hover:bg-gray-100 ${row.unit ? 'border-gray-200' : 'border-gray-300'}`}
                       required={index === 0}
                     >
-                      <option value="" className="bg-stone-900 text-gray-400">{index === 0 ? "Select unit" : "Select unit (optional)"}</option>
-                      {unitOptions.map(unit => (<option key={unit} value={unit} className="bg-stone-800 text-stone-200 hover:bg-amber-600">{unit}</option>))}
+                      <option value="" className="text-gray-500">{index === 0 ? "Select unit" : "Select unit (optional)"}</option>
+                      {unitOptions.map(unit => (<option key={unit} value={unit} className="text-gray-800">{unit}</option>))}
                     </select>
                   </div>
 
                   <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5" />
+                    <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="number"
                       value={row.quantity}
                       onChange={(e) => updateFeedRow(index, 'quantity', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-stone-800/50 border rounded-lg text-stone-200 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 ${row.quantity ? 'border-green-500/30' : 'border-stone-600'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-200 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all hover:bg-gray-100 ${row.quantity ? 'border-gray-200' : 'border-gray-300'}`}
                       placeholder={index === 0 ? "0000" : "Enter quantity (optional)"}
                       min="0"
                       step="any"
@@ -369,7 +358,7 @@ export default function UserForm() {
               <motion.button
                 type="button"
                 // --- THEME CHANGE: New entry button ---
-                className="bg-green-800/40 hover:bg-green-800/60 text-green-300 hover:text-green-200 p-2 rounded-lg transition-all duration-300"
+                className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg transition-all"
                 onClick={handleAddEntry}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -381,22 +370,22 @@ export default function UserForm() {
 
           {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length > 0 && (
             <motion.div
-              className="bg-green-900/30 border border-green-500/20 rounded-lg p-4"
+              className="bg-emerald-100 border border-green-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <h4 className="text-green-200 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
               </div>
-              <p className="text-green-300/80 text-sm">
+              <p className="text-green-700 text-sm">
                 All required fields are filled.
               </p>
             </motion.div>
           )}
 
           {submitStatus === 'error' && (
-            <motion.div className="flex items-center space-x-2 text-red-300 bg-red-900/40 border border-red-500/30 rounded-lg p-3">
+            <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{errorMessage}</span>
             </motion.div>
@@ -406,9 +395,9 @@ export default function UserForm() {
             type="submit"
             disabled={!canSubmit}
             // --- THEME CHANGE: Submit button ---
-            className={`w-full font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform flex items-center justify-center space-x-2 shadow-lg ${canSubmit
-              ? 'bg-amber-600 hover:bg-amber-700 text-white hover:scale-105 hover:shadow-xl'
-              : 'bg-stone-600 cursor-not-allowed text-stone-400'
+            className={`w-full font-semibold py-4 px-6 rounded-lg transition-all transform flex items-center justify-center space-x-2 shadow-lg ${canSubmit
+              ? 'bg-gray-200 hover:bg-gray-200 text-gray-800 hover:scale-105 hover:shadow-xl'
+              : 'bg-gray-400 cursor-not-allowed text-gray-800'
               }`}
             whileHover={{ scale: canSubmit ? 1.05 : 1 }}
             whileTap={{ scale: canSubmit ? 0.95 : 1 }}

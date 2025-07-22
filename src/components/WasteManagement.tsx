@@ -8,44 +8,43 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
-  Droplets,
-  Recycle,
+  Zap,
   Plus,
-  Home // Added Home icon
+  Trash2,
+  Home
 } from 'lucide-react'
 
-const etpOptions = [
-  'Chemical',
-  'Biological',
-  'Physical',
-  'Combined'
+const energyTypeOptions = [
+  'Electricity (grid)',
+  'Natural Gas',
+  'Diesel',
+  'Solar',
+  'Wind',
+  'Biomass',
+  'Coal',
+  'LPG',
+  'Fuel Oil',
+  'Other'
 ]
 
-const waterTreatmentOptions = [
-  'None - stagnant sewer',
-  'Primary treatment',
-  'Secondary treatment',
-  'Tertiary treatment',
-  'Advanced treatment'
-]
+const unitOptions = ['kWh', 'MWh', 'GWh', 'BTU', 'therms', 'gallons', 'liters', 'kg', 'tons']
 
-interface WasteData {
-  wasteWaterTreated: string
-  oxygenDemand: string
-  etp: string
-  waterTreatmentType: string
+interface EnergyRow {
+  facility: string
+  energyType: string
+  unit: string
+  consumption: string
 }
 
-export default function WasteManagement() {
+const facilityTypes = ['Farm', 'Processing Plant', 'Hatchery Plant']
+
+export default function EnergyProcessing() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [wasteRows, setWasteRows] = useState<WasteData[]>([
-    {
-      wasteWaterTreated: '1,00,00,000',
-      oxygenDemand: '250',
-      etp: 'Chemical',
-      waterTreatmentType: 'None - stagnant sewer'
-    }
+  const [energyRows, setEnergyRows] = useState<EnergyRow[]>([
+    { facility: 'Farm', energyType: '', unit: '', consumption: '' },
+    { facility: 'Processing Plant', energyType: '', unit: '', consumption: '' },
+    { facility: 'Hatchery Plant', energyType: '', unit: '', consumption: '' }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -54,18 +53,17 @@ export default function WasteManagement() {
 
   const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true)
 
-  const entryId = 'entry_1' // For now, using default entry
+  const entryId = 'entry_1'
 
   React.useEffect(() => {
     const loadUserProfile = async () => {
       const profile = getUserProfile()
       setUserProfile(profile)
 
-      // Load auto-saved data
       try {
-        const savedData = await loadAutoSavedData('waste', entryId)
+        const savedData = await loadAutoSavedData('energy', entryId)
         if (savedData && Array.isArray(savedData)) {
-          setWasteRows(savedData)
+          setEnergyRows(savedData)
         }
       } catch (error) {
         console.error('Error loading auto-saved data:', error)
@@ -76,14 +74,11 @@ export default function WasteManagement() {
     loadUserProfile()
   }, [])
 
-  // Save data when navigating away
   React.useEffect(() => {
     const handleBeforeUnload = () => {
-      const hasData = wasteRows.some(row =>
-        row.wasteWaterTreated || row.oxygenDemand || row.etp || row.waterTreatmentType
-      )
+      const hasData = energyRows.some(row => row.energyType || row.unit || row.consumption)
       if (hasData) {
-        saveFormDataImmediately('waste', wasteRows, entryId)
+        saveFormDataImmediately('energy', energyRows, entryId)
       }
     }
 
@@ -97,54 +92,62 @@ export default function WasteManagement() {
       window.removeEventListener('beforeunload', handleBeforeUnload)
       unlisten()
     }
-  }, [wasteRows, entryId])
+  }, [energyRows, entryId])
 
-  // Auto-save functionality
   React.useEffect(() => {
-    if (!isLoadingAutoSave && wasteRows.length > 0) {
-      // Only auto-save if there's meaningful data
-      const hasData = wasteRows.some(row =>
-        row.wasteWaterTreated || row.oxygenDemand || row.etp || row.waterTreatmentType
-      )
+    if (!isLoadingAutoSave && energyRows.length > 0) {
+      const hasData = energyRows.some(row => row.energyType || row.unit || row.consumption)
       if (hasData) {
-        autoSaveFormData('waste', wasteRows, entryId)
+        autoSaveFormData('energy', energyRows, entryId)
       }
     }
-  }, [wasteRows, isLoadingAutoSave])
+  }, [energyRows, isLoadingAutoSave])
 
-  const updateWasteRow = (rowIndex: number, field: keyof WasteData, value: string) => {
-    setWasteRows(prev => prev.map((row, i) =>
-      i === rowIndex ? { ...row, [field]: value } : row
+  const updateEnergyRow = (index: number, field: keyof EnergyRow, value: string) => {
+    setEnergyRows(prev => prev.map((row, i) =>
+      i === index ? { ...row, [field]: value } : row
     ))
   }
 
-  const handleAddEntry = () => {
-    setWasteRows(prev => [
+  const handleAddEntry = (facility: string) => {
+    setEnergyRows(prev => [
       ...prev,
-      {
-        wasteWaterTreated: '',
-        oxygenDemand: '',
-        etp: etpOptions[0],
-        waterTreatmentType: waterTreatmentOptions[0]
-      }
+      { facility, energyType: '', unit: '', consumption: '' }
     ])
   }
 
-  const handleRemoveEntry = (rowIndex: number) => {
-    setWasteRows(prev => prev.filter((_, i) => i !== rowIndex))
+  const handleRemoveEntry = (index: number) => {
+    setEnergyRows(prev => prev.filter((_, i) => i !== index))
   }
 
-  const isFormValid = wasteRows.every(row =>
-    row.wasteWaterTreated && row.oxygenDemand && row.etp && row.waterTreatmentType
+  const hasValidRowForFacility = (facility: string) =>
+    energyRows.some(row =>
+      row.facility === facility &&
+      row.energyType && row.unit && row.consumption
+    )
+
+  const isFormValid =
+    hasValidRowForFacility('Hatchery Plant') &&
+    hasValidRowForFacility('Processing Plant') &&
+    hasValidRowForFacility('Farm')
+
+  const validRows = energyRows.filter(row =>
+    row.energyType && row.unit && row.consumption
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (isSubmitting) return
 
-    if (!isFormValid) {
-      setErrorMessage('Please complete all waste management fields.')
+    let missingFacilities: string[] = []
+    if (!hasValidRowForFacility('Hatchery Plant')) missingFacilities.push('Hatchery Plant')
+    if (!hasValidRowForFacility('Processing Plant')) missingFacilities.push('Processing Plant')
+    if (!hasValidRowForFacility('Farm')) missingFacilities.push('Farm')
+
+    if (missingFacilities.length > 0) {
+      setErrorMessage(
+        `Please complete at least one energy entry for: ${missingFacilities.join(', ')}.`
+      )
       setSubmitStatus('error')
       return
     }
@@ -157,67 +160,31 @@ export default function WasteManagement() {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
-      const dataToInsert = wasteRows.flatMap(row => [
-        {
-          name: 'Waste Water Treated',
-          description: `${row.wasteWaterTreated} litres`,
-          category: 'waste_management',
-          value: parseFloat(row.wasteWaterTreated.replace(/,/g, '')) || 0,
+      const dataToInsert = validRows.map(row => {
+        const consumption = parseFloat(row.consumption.replace(/,/g, '')) || 0
+
+        return {
+          name: `${row.facility} - ${row.energyType}`,
+          description: `${row.consumption} ${row.unit}`,
+          category: 'energy_processing',
+          value: consumption,
           status: 'active',
-          tags: ['waste_water', 'treatment'],
+          tags: [row.facility.toLowerCase().replace(/\s+/g, '_'), row.energyType.toLowerCase().replace(/\s+/g, '_'), row.unit],
           priority: 'medium',
           user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'Oxygen Demand (BOD / COD)',
-          description: `${row.oxygenDemand} mg / L`,
-          category: 'waste_management',
-          value: parseFloat(row.oxygenDemand) || 0,
-          status: 'active',
-          tags: ['oxygen_demand', 'BOD', 'COD'],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'ETP',
-          description: row.etp,
-          category: 'waste_management',
-          value: 0,
-          status: 'active',
-          tags: ['ETP', row.etp.toLowerCase()],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'Water Treatment Type',
-          description: row.waterTreatmentType,
-          category: 'waste_management',
-          value: 0,
-          status: 'active',
-          tags: ['water_treatment', row.waterTreatmentType.toLowerCase().replace(/\s+/g, '_')],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
           organization_name: userProfile?.organization_name || null
         }
-      ])
+      })
 
       const { error } = await supabase.from('data_rows').insert(dataToInsert)
       if (error) throw error
 
-      // Clear auto-saved data after successful submission
-      await clearAutoSavedData('waste', entryId)
+      await clearAutoSavedData('energy', entryId)
 
       setSubmitStatus('success')
 
     } catch (error) {
-      console.error('Error submitting waste management data:', error)
+      console.error('Error submitting energy processing data:', error)
       setSubmitStatus('error')
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred')
     } finally {
@@ -225,53 +192,37 @@ export default function WasteManagement() {
     }
   }
 
-  // Show loading state while loading auto-saved data
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading your saved data...</p>
-        </motion.div>
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
   }
 
   if (submitStatus === 'success') {
     return (
-      <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
-        <motion.div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+        <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-400" />
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-
-            <p className="text-gray-300 mb-6">Waste management data has been submitted</p>
+            <p className="text-gray-600 mb-6">Energy & processing data has been submitted</p>
             <div className="space-y-4">
               <motion.button
-                onClick={() => navigate('/transport')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/waste')}
+                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
               >
-                Continue to Transport
+                Continue to Waste Management
               </motion.button>
-
-              {/* --- ADDED THIS BUTTON --- */}
               <motion.button
                 onClick={() => navigate('/')}
-                className="w-full flex items-center justify-center gap-2 bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600 text-gray-300 font-semibold py-3 px-6 rounded-lg transition-colors duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg"
               >
                 <Home className="w-5 h-5" />
                 Exit to Home Page
               </motion.button>
-
             </div>
           </div>
         </motion.div>
@@ -279,10 +230,20 @@ export default function WasteManagement() {
     )
   }
 
+  const farmRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Farm')
+  const processingRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Processing Plant')
+  const hatcheryRows = energyRows.map((r, i) => ({ ...r, index: i })).filter(row => row.facility === 'Hatchery Plant')
+
+  const sectionBgClasses = [
+    { row: "bg-gray-50 hover:bg-gray-100", text: "text-gray-800", block: "bg-gray-100 text-gray-700 border-r border-gray-200" },
+    { row: "bg-white hover:bg-gray-50", text: "text-gray-800", block: "bg-gray-100 text-gray-700 border-r border-gray-200" },
+    { row: "bg-gray-50 hover:bg-gray-100", text: "text-gray-800", block: "bg-gray-100 text-gray-700 border-r border-gray-200" }
+  ]
+
   return (
-    <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
       <motion.div
-        className="max-w-4xl w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-10 shadow-2xl"
+        className="max-w-6xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -294,189 +255,216 @@ export default function WasteManagement() {
           transition={{ delay: 0.1 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-2">
-            <Recycle className="w-8 h-8 text-blue-400" />
-            <h1 className="text-3xl font-bold text-white">Waste Management</h1>
+            <Zap className="w-8 h-8 text-yellow-500" />
+            <h1 className="text-3xl font-bold text-gray-800">Energy & Processing</h1>
           </div>
-          <p className="text-gray-300">Record your waste management information</p>
+          <p className="text-gray-600">Record your energy consumption data</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Instructions */}
           <motion.div
-            className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6"
+            className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center mt-0.5">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center mt-0.5">
+                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
               </div>
               <div>
-                <p className="text-blue-200 text-sm font-medium mb-2">Instructions:</p>
-                <ul className="text-blue-300/80 text-sm space-y-1">
-                  <li>• Enter the amount of waste water treated in litres</li>
-                  <li>• Specify oxygen demand (BOD/COD) in mg/L</li>
-                  <li>• Select the type of ETP (Effluent Treatment Plant) used</li>
-                  <li>• Choose the water treatment method employed</li>
-                  <li>• Click "+ New Entry" to add more waste management records if needed</li>
+                <p className="text-gray-700 text-sm font-medium mb-2">Instructions:</p>
+                <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
+                  <li>Select the type of energy from the dropdown for each facility.</li>
+                  <li>Choose the appropriate unit (kWh, MWh, etc.).</li>
+                  <li>Enter the consumption amount for each energy type.</li>
+                  <li>Click "+ New Entry" to add more rows for a facility if needed.</li>
+                  <li>Remove extra rows as needed.</li>
+                  <li className="text-gray-800 font-semibold mt-1">All three facilities are mandatory.</li>
                 </ul>
               </div>
             </div>
           </motion.div>
 
-          {/* Waste Management Table */}
           <motion.div
-            className="bg-white/5 border border-white/10 rounded-lg overflow-hidden relative"
+            className="bg-white border border-gray-300 rounded-lg overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <div className="overflow-x-auto pb-20">
-              {wasteRows.map((row, rowIndex) => (
-                <React.Fragment key={rowIndex}>
-                  {/* Separator line between entries, except before the first */}
-                  {rowIndex > 0 && (
-                    <div className="h-0.5 w-full my-2 bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 opacity-70 rounded-lg transition-all duration-500" />
-                  )}
-                  <table className="w-full mb-2">
-                    <tbody>
-                      <tr className="border-b border-white/10">
-                        <td className="px-6 py-4 text-white font-medium bg-white/5 w-1/3">
-                          <div className="flex items-center space-x-2">
-                            <Droplets className="w-5 h-5 text-blue-400" />
-                            <span>Waste Water Treated</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <input
-                            type="text"
-                            value={row.wasteWaterTreated}
-                            onChange={(e) => updateWasteRow(rowIndex, 'wasteWaterTreated', e.target.value)}
-                            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right"
-                            placeholder="Enter amount"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-gray-300 font-medium">
-                          litres
-                        </td>
-                        {rowIndex > 0 && (
-                          <td rowSpan={4} className="px-6 py-4 align-top" style={{ verticalAlign: "top" }}>
-                            <div className="flex flex-col items-end space-y-2">
-                              <motion.button
-                                type="button"
-                                className="bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 p-2 rounded-lg transition-all duration-300"
-                                onClick={() => handleRemoveEntry(rowIndex)}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                title="Remove entry"
-                              >
-                                Remove
-                              </motion.button>
-                            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-gray-600 font-medium w-1/6">Facility</th>
+                    <th className="px-6 py-4 text-center text-gray-600 font-medium w-2/6">Select Type of Energy</th>
+                    <th className="px-6 py-4 text-center text-gray-600 font-medium w-1/6">Select unit</th>
+                    <th className="px-6 py-4 text-center text-gray-600 font-medium w-2/6">Input Amount of Consumption</th>
+                    <th className="px-6 py-4 w-12"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hatcheryRows.map((row, rindex) => {
+                    const sectionClass = sectionBgClasses[2].row;
+                    const blockClass = sectionBgClasses[2].block;
+                    return (
+                      <tr key={`hatchery-${row.index}`} className={sectionClass}>
+                        {rindex === 0 && (
+                          <td rowSpan={hatcheryRows.length} className={`px-6 py-4 font-medium text-center align-middle ${blockClass}`}>
+                            Hatchery Plant
                           </td>
                         )}
-                      </tr>
-                      <tr className="border-b border-white/10">
-                        <td className="px-6 py-4 text-white font-medium bg-white/5">
-                          <span>Oxygen Demand (BOD / COD)</span>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select energy type</option>
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="text-gray-800">{option}</option>))}
+                            </select>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
-                          <input
-                            type="number"
-                            value={row.oxygenDemand}
-                            onChange={(e) => updateWasteRow(rowIndex, 'oxygenDemand', e.target.value)}
-                            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-right"
-                            placeholder="Enter value"
-                            min="0"
-                            step="0.1"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-gray-300 font-medium">
-                          mg / L
-                        </td>
-                      </tr>
-                      <tr className="border-b border-white/10">
-                        <td className="px-6 py-4 text-white font-medium bg-white/5">
-                          <span>ETP</span>
-                        </td>
-                        <td className="px-6 py-4" colSpan={2}>
                           <div className="relative">
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.etp}
-                              onChange={(e) => updateWasteRow(rowIndex, 'etp', e.target.value)}
-                              className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
-                              {etpOptions.map(option => (
-                                <option key={option} value={option} className="bg-gray-800 text-white">
-                                  {option}
-                                </option>
-                              ))}
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select unit</option>
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="text-gray-800">{unit}</option>))}
                             </select>
                           </div>
                         </td>
-                      </tr>
-                      <tr>
-                        <td className="px-6 py-4 text-white font-medium bg-white/5">
-                          <span>Water Treatment type</span>
+                        <td className="px-6 py-4">
+                          <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-right" placeholder="Enter amount" />
                         </td>
-                        <td className="px-6 py-4" colSpan={2}>
-                          <div className="relative">
-                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                            <select
-                              value={row.waterTreatmentType}
-                              onChange={(e) => updateWasteRow(rowIndex, 'waterTreatmentType', e.target.value)}
-                              className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
-                            >
-                              {waterTreatmentOptions.map(option => (
-                                <option key={option} value={option} className="bg-gray-800 text-white">
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                        <td className="px-6 py-4 text-center">
+                          {hatcheryRows.length > 1 && (
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-500 hover:text-red-700 p-1 rounded" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
                         </td>
                       </tr>
-                    </tbody>
-                  </table>
-                </React.Fragment>
-              ))}
-              {/* New Entry Button at bottom-left */}
-              <div className="absolute bottom-6 left-6 z-10">
-                <motion.button
-                  type="button"
-                  className="bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 p-2 rounded-lg transition-all duration-300"
-                  onClick={handleAddEntry}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                    )
+                  })}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-2">
+                      <div className="flex justify-left">
+                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Hatchery Plant')}>+ New Entry</motion.button>
+                      </div>
+                    </td>
+                  </tr>
 
-                  + New Entry
-                </motion.button>
-              </div>
+                  {farmRows.map((row, rindex) => {
+                    const sectionClass = sectionBgClasses[0].row;
+                    const blockClass = sectionBgClasses[0].block;
+                    return (
+                      <tr key={`farm-${row.index}`} className={sectionClass}>
+                        {rindex === 0 && (<td rowSpan={farmRows.length} className={`px-6 py-4 font-medium text-center align-middle ${blockClass}`}>Farm</td>)}
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select energy type</option>
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="text-gray-800">{option}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select unit</option>
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="text-gray-800">{unit}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-right" placeholder="Enter amount" />
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {farmRows.length > 1 && (
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-500 hover:text-red-700 p-1 rounded" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-2">
+                      <div className="flex justify-left">
+                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Farm')}>+ New Entry</motion.button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {processingRows.map((row, rindex) => {
+                    const sectionClass = sectionBgClasses[1].row;
+                    const blockClass = sectionBgClasses[1].block;
+                    return (
+                      <tr key={`processing-${row.index}`} className={sectionClass}>
+                        {rindex === 0 && (<td rowSpan={processingRows.length} className={`px-6 py-4 font-medium text-center align-middle ${blockClass}`}>Processing Plant</td>)}
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.energyType} onChange={(e) => updateEnergyRow(row.index, 'energyType', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select energy type</option>
+                              {energyTypeOptions.map(option => (<option key={option} value={option} className="text-gray-800">{option}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select value={row.unit} onChange={(e) => updateEnergyRow(row.index, 'unit', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer">
+                              <option value="" className="text-gray-500">Select unit</option>
+                              {unitOptions.map(unit => (<option key={unit} value={unit} className="text-gray-800">{unit}</option>))}
+                            </select>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <input type="text" value={row.consumption} onChange={(e) => updateEnergyRow(row.index, 'consumption', e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 text-right" placeholder="Enter amount" />
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {processingRows.length > 1 && (
+                            <motion.button type="button" onClick={() => handleRemoveEntry(row.index)} className="text-red-500 hover:text-red-700 p-1 rounded" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} title="Remove row">
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-2">
+                      <div className="flex justify-left">
+                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Processing Plant')}>+ New Entry</motion.button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </motion.div>
 
-          {/* Summary */}
           {isFormValid && (
             <motion.div
-              className="bg-green-500/10 border border-green-500/20 rounded-lg p-4"
+              className="bg-green-100 border border-green-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <h4 className="text-green-200 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
               </div>
-              <p className="text-green-300/80 text-sm">
-                All required fields are filled.
+              <p className="text-green-700 text-sm">
+                All required facility entries configured and ready for submission.
               </p>
             </motion.div>
           )}
 
           {submitStatus === 'error' && (
-            <motion.div className="flex items-center space-x-2 text-red-400 bg-red-900/20 border border-red-500/20 rounded-lg p-3">
+            <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{errorMessage}</span>
             </motion.div>
@@ -485,25 +473,20 @@ export default function WasteManagement() {
           <motion.button
             type="submit"
             disabled={!isFormValid || isSubmitting}
-            className={`w-full font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform flex items-center justify-center space-x-2 shadow-lg ${isFormValid && !isSubmitting
-              ? 'bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 hover:shadow-xl'
-              : 'bg-gray-600 cursor-not-allowed text-gray-300'
-              }`}
+            // --- THEME CHANGE: Submit button ---
+            className={`w-full font-semibold py-4 px-6 rounded-lg transition-all transform flex items-center justify-center space-x-2 shadow-lg ${isFormValid && !isSubmitting ? 'bg-gray-200 hover:bg-gray-200 text-gray-800 hover:scale-105 hover:shadow-xl' : 'bg-gray-400 cursor-not-allowed text-gray-800'}`}
             whileHover={{ scale: isFormValid && !isSubmitting ? 1.05 : 1 }}
             whileTap={{ scale: isFormValid && !isSubmitting ? 0.95 : 1 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
           >
             {isSubmitting ? (
               <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div>
                 <span>Submitting...</span>
               </>
             ) : !isFormValid ? (
               <>
                 <AlertCircle className="w-5 h-5" />
-                <span>Complete all fields to submit</span>
+                <span>Complete all required facility entries to submit</span>
               </>
             ) : (
               <>

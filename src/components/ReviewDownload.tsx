@@ -83,7 +83,7 @@ function downloadAsPDFFromData(allData: Record<string, any>) {
     startY: 55,
     margin: { left: 14, right: 14 },
     styles: { fontSize: 8, cellPadding: 3 },
-    headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255], fontSize: 9 },
+    headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontSize: 9 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: { 0: { cellWidth: 20 }, 1: { cellWidth: 15 } }
   })
@@ -130,7 +130,6 @@ export default function ReviewDownload() {
   const [allData, setAllData] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [showReview, setShowReview] = useState(false)
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false)
   const [userInfo, setUserInfo] = useState<{ email: string | null, profile: any }>({
     email: null,
     profile: null
@@ -177,7 +176,6 @@ export default function ReviewDownload() {
 
   const handleDownload = async (format: 'pdf' | 'csv' | 'xlsx') => {
     setDownloading(format)
-    setShowDownloadMenu(false)
     try {
       switch (format) {
         case 'pdf':
@@ -203,8 +201,6 @@ export default function ReviewDownload() {
     switch (type) {
       case 'feed': return data.map((item, index) => ({ 'S.no': index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
       case 'manure': return data.map((item, index) => ({ 'S.no': index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
-      // --- THIS IS THE ONLY CHANGE ---
-      // Added a .sort() method to order the energy data by 'energyType' before it's displayed.
       case 'energy': return data.sort((a, b) => (a.energyType || '').localeCompare(b.energyType || '')).map((item, index) => ({ 'S.no': index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
       case 'waste': return data.map((item, index) => ({ 'S.no': index + 1, wasteWater: item.wasteWaterTreated || 'N/A', oxygenDemand: item.oxygenDemand || 'N/A', etp: item.etp || 'N/A', treatmentType: item.waterTreatmentType || 'N/A' }));
       case 'transport': return data.map((item, index) => ({ 'S.no': index + 1, route: item.route || 'N/A', vehicleType: item.vehicleType || 'N/A', distance: item.distance || 'N/A' }));
@@ -212,24 +208,23 @@ export default function ReviewDownload() {
     }
   }
 
-  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-400', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-400', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-400', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-400', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['S.no', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-400', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['S.no', 'Route', 'Vehicle Type', 'Distance'] }];
+  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-600', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-600', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-600', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-600', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['S.no', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-600', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['S.no', 'Route', 'Vehicle Type', 'Distance'] }];
   const completedSections = sections.filter(section => section.data.length > 0);
 
   if (loading) {
     return (
-      <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading your submission...</p>
-        </motion.div>
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     );
   }
 
   return (
-    <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+    // --- THEME CHANGE: Main container background ---
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+      {/* --- THEME CHANGE: Content container styling --- */}
       <motion.div
-        className="max-w-4xl w-full bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 shadow-2xl"
+        className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -242,70 +237,68 @@ export default function ReviewDownload() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-400" />
+              {/* --- THEME CHANGE: Header --- */}
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Review Submission</h1>
-              <p className="text-gray-300">Your data has been successfully saved. Review or download your submission below.</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Review & Download Your Submission</h1>
+              <p className="text-gray-600">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
+            {/* --- THEME CHANGE: Info box --- */}
             <motion.div
-              className="bg-white/5 border border-white/10 rounded-lg p-6 mb-6"
+              className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
               <div className="flex flex-col md:flex-row md:justify-center md:gap-16 gap-4">
                 <div className="flex items-center space-x-3">
-                  <Building2 className="w-5 h-5 text-green-400" />
+                  <Building2 className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="text-gray-400 text-sm">Organization</p>
-                    <p className="text-white font-medium">{userInfo.profile?.organization_name || 'N/A'}</p>
+                    <p className="text-gray-500 text-sm">Organization</p>
+                    <p className="text-gray-800 font-medium">{userInfo.profile?.organization_name || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-purple-400" />
+                  <Calendar className="w-5 h-5 text-purple-600" />
                   <div>
-                    <p className="text-gray-400 text-sm">Generated</p>
-                    <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
+                    <p className="text-gray-500 text-sm">Generated</p>
+                    <p className="text-gray-800 font-medium">{new Date().toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
             </motion.div>
+            {/* --- THEME CHANGE: Completion status box --- */}
             <motion.div
-              className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-8"
+              className="bg-green-100 border border-green-300 rounded-lg p-4 mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <h3 className="text-green-200 font-medium">Submission Complete</h3>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h3 className="text-green-800 font-medium">Submission Complete</h3>
               </div>
-              <p className="text-green-300/80 text-sm">
+              <p className="text-green-700 text-sm">
                 ({completedSections.length} of 5 sections completed)
               </p>
             </motion.div>
             <div className="space-y-4">
+              {/* --- THEME CHANGE: Buttons --- */}
               <motion.button
                 onClick={() => setShowReview(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
               >
                 <Eye className="w-5 h-5" />
                 <span>Review Your Submission</span>
               </motion.button>
               <motion.button
                 onClick={() => navigate('/')}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center space-x-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
               >
                 Return to Welcome Page
               </motion.button>
@@ -320,59 +313,60 @@ export default function ReviewDownload() {
             >
               <motion.button
                 onClick={() => setShowReview(false)}
-                className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-300 flex items-center space-x-2"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-lg flex items-center space-x-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span>Back</span>
               </motion.button>
-              <h2 className="text-2xl font-bold text-white">Submission Review</h2>
+              <h2 className="text-2xl font-bold text-gray-800">Submission Review</h2>
               <div></div>
             </motion.div>
-            <div className="space-y-6 max-h-96 overflow-y-auto">
+            {/* --- THEME CHANGE: Scrollable area and data containers --- */}
+            <div className="space-y-6 max-h-96 overflow-y-auto pr-4">
               {completedSections.map((section, index) => {
                 const Icon = section.icon;
                 return (
                   <motion.div
                     key={section.key}
-                    className="bg-white/5 border border-white/10 rounded-lg p-6"
+                    className="bg-white border border-gray-200 rounded-lg p-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
                     <div className="flex items-center space-x-3 mb-4">
                       <Icon className={`w-6 h-6 ${section.color}`} />
-                      <h3 className="text-xl font-semibold text-white">{section.title}</h3>
+                      <h3 className="text-xl font-semibold text-gray-800">{section.title}</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-white/10">
+                          <tr className="border-b border-gray-200">
                             {section.headers.map(header => (
-                              <th key={header} className="text-left py-2 px-3 text-gray-300 font-medium">{header}</th>
+                              <th key={header} className="text-left py-2 px-3 text-gray-500 font-medium">{header}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {section.data.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="border-b border-white/5">
+                            <tr key={rowIndex} className="border-b border-gray-100">
                               {Object.values(row).map((value, cellIndex) => (
-                                <td key={cellIndex} className="py-2 px-3 text-white">{String(value)}</td>
+                                <td key={cellIndex} className="py-2 px-3 text-gray-700">{String(value)}</td>
                               ))}
                             </tr>
                           ))}
                           {section.key === 'feed' && section.data.length > 0 && (
-                            <tr className="border-t-2 border-white/20">
-                              <td className="py-3 px-3 text-white font-bold" colSpan={2}>Total</td>
-                              <td className="py-3 px-3 text-white font-bold">{totalFeedInKgs.toFixed(2)}</td>
-                              <td className="py-3 px-3 text-white font-bold">KGs</td>
+                            <tr className="border-t-2 border-gray-300">
+                              <td className="py-3 px-3 text-gray-800 font-bold" colSpan={2}>Total</td>
+                              <td className="py-3 px-3 text-gray-800 font-bold">{totalFeedInKgs.toFixed(2)}</td>
+                              <td className="py-3 px-3 text-gray-800 font-bold">KGs</td>
                             </tr>
                           )}
                           {section.key === 'transport' && section.data.length > 0 && (
-                            <tr className="border-t-2 border-white/20">
-                              <td className="py-3 px-3 text-white font-bold" colSpan={3}>Total Distance</td>
-                              <td className="py-3 px-3 text-white font-bold">{totalTransportInKms.toFixed(2)} KMs</td>
+                            <tr className="border-t-2 border-gray-300">
+                              <td className="py-3 px-3 text-gray-800 font-bold" colSpan={3}>Total Distance</td>
+                              <td className="py-3 px-3 text-gray-800 font-bold">{totalTransportInKms.toFixed(2)} KMs</td>
                             </tr>
                           )}
                         </tbody>
@@ -381,22 +375,22 @@ export default function ReviewDownload() {
                   </motion.div>
                 );
               })}
+              {/* --- THEME CHANGE: Download section --- */}
               <motion.div
-                className="bg-white/5 border border-white/10 rounded-lg p-6 mt-6"
+                className="bg-gray-50 border border-gray-200 rounded-lg p-6 mt-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: completedSections.length * 0.1 }}
               >
                 <div className="flex items-center space-x-3 mb-4">
-                  <Download className={`w-6 h-6 text-green-400`} />
-                  <h3 className="text-xl font-semibold text-white">Download Submission</h3>
+                  <Download className={`w-6 h-6 text-green-600`} />
+                  <h3 className="text-xl font-semibold text-gray-800">Download Submission</h3>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button onClick={() => handleDownload('pdf')} className="flex-1 px-6 py-3 text-white bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center space-x-3 rounded-lg">
-                    <FileText className="w-5 h-5 text-red-400" />
+                  <button onClick={() => handleDownload('pdf')} className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors flex items-center justify-center space-x-3 rounded-lg">
+                    <FileText className="w-5 h-5 text-red-500" />
                     <span>Download as PDF</span>
                   </button>
-
                 </div>
               </motion.div>
             </div>
