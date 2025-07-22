@@ -191,10 +191,10 @@ export default function ManureManagement() {
             <p className="text-gray-600 mb-6">Manure management data has been submitted</p>
             <div className="space-y-4">
               <motion.button
-                onClick={() => navigate('/energy')}
+                onClick={() => navigate('/waste')}
                 className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
               >
-                Continue to Energy & Processing
+                Continue to Waste Management
               </motion.button>
               <motion.button
                 onClick={() => navigate('/')}

@@ -224,7 +224,7 @@ export default function ReviewDownload() {
     <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
       {/* --- THEME CHANGE: Content container styling --- */}
       <motion.div
-        className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl"
+        className="max-w-4xl w-full bg-white rounded-2xl border border-gray-400 p-8 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -330,7 +330,7 @@ export default function ReviewDownload() {
                 return (
                   <motion.div
                     key={section.key}
-                    className="bg-white border border-gray-200 rounded-lg p-6"
+                    className="bg-gray-200 border border-gray-200 rounded-lg p-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -342,7 +342,7 @@ export default function ReviewDownload() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-gray-200">
+                          <tr className="border-b border-gray-600">
                             {section.headers.map(header => (
                               <th key={header} className="text-left py-2 px-3 text-gray-500 font-medium">{header}</th>
                             ))}
@@ -350,21 +350,21 @@ export default function ReviewDownload() {
                         </thead>
                         <tbody>
                           {section.data.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="border-b border-gray-100">
+                            <tr key={rowIndex} className="border-b border-gray-800">
                               {Object.values(row).map((value, cellIndex) => (
                                 <td key={cellIndex} className="py-2 px-3 text-gray-700">{String(value)}</td>
                               ))}
                             </tr>
                           ))}
                           {section.key === 'feed' && section.data.length > 0 && (
-                            <tr className="border-t-2 border-gray-300">
+                            <tr className="border-t-2 border-gray-500">
                               <td className="py-3 px-3 text-gray-800 font-bold" colSpan={2}>Total</td>
                               <td className="py-3 px-3 text-gray-800 font-bold">{totalFeedInKgs.toFixed(2)}</td>
                               <td className="py-3 px-3 text-gray-800 font-bold">KGs</td>
                             </tr>
                           )}
                           {section.key === 'transport' && section.data.length > 0 && (
-                            <tr className="border-t-2 border-gray-300">
+                            <tr className="border-t-2 border-gray-500">
                               <td className="py-3 px-3 text-gray-800 font-bold" colSpan={3}>Total Distance</td>
                               <td className="py-3 px-3 text-gray-800 font-bold">{totalTransportInKms.toFixed(2)} KMs</td>
                             </tr>

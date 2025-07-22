@@ -85,7 +85,7 @@ export default function Navbar() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Survey App
+              GHG EMISSION TRACKER
             </motion.h1>
           </motion.div>
 
