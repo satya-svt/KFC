@@ -239,7 +239,7 @@ export default function ManureManagement() {
           </motion.div>
 
           <motion.div
-            className={`bg-white border rounded-lg p-4 ${totalDaysUsed > 365 ? 'border-red-400 bg-red-50' : totalDaysUsed > 0 ? 'border-green-400 bg-green-50' : 'border-gray-300'}`}
+            className={`bg-white border rounded-lg p-4 ${totalDaysUsed > 365 ? 'border-red-400 bg-red-50' : totalDaysUsed > 0 ? 'border-gray-400 bg-gray-50' : 'border-gray-300'}`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -247,7 +247,7 @@ export default function ManureManagement() {
                 <span className="text-gray-800 font-medium">Total Days Used:</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className={`text-2xl font-bold ${totalDaysUsed > 365 ? 'text-red-600' : totalDaysUsed > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                <span className={`text-2xl font-bold ${totalDaysUsed > 365 ? 'text-red-600' : totalDaysUsed > 0 ? 'text-gray-600' : 'text-gray-500'}`}>
                   {totalDaysUsed}
                 </span>
                 <span className="text-gray-500">/ 365 days</span>
@@ -269,7 +269,7 @@ export default function ManureManagement() {
                   <div className="flex items-center space-x-2">
                     <h4 className="text-gray-800 font-medium">Manure Entry {index + 1}</h4>
                     {row.systemType && row.daysUsed && (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-4 h-4 text-gray-600" />
                     )}
                   </div>
                   {index > 0 && (

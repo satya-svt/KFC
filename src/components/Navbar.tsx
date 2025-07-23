@@ -65,7 +65,7 @@ export default function Navbar() {
   return (
     // The main nav container has its original full-width style.
     <motion.nav
-      className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10"
+      className="fixed top-0 left-0 right-0 z-50 bg-gray-400 backdrop-blur-lg border-b border-white/10"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -139,7 +139,7 @@ export default function Navbar() {
             {/* Logout Button (Desktop) */}
             <motion.button
               onClick={handleLogout}
-              className="hidden md:flex items-center space-x-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-3 py-2 rounded-lg transition-all duration-300"
+              className="hidden md:flex items-center space-x-2 bg-transparent hover:bg-red-600/30 text-red-500 hover:text-red-300 px-3 py-2 rounded-lg transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               initial={{ opacity: 0, x: 20 }}

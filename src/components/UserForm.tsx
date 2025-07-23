@@ -14,10 +14,7 @@ import {
   Plus,
   Home
 } from 'lucide-react'
-
-// --- 1. IMPORT THE IMAGE ---
-// This path is based on your folder structure screenshot
-import BackgroundImage from '../assets/silvergrey.jpg'
+import silvergrey from '../assets/silvergrey.jpg'
 
 const feedOptions = [
   'Corn(Maize)', 'Soyameal', 'Cotton', 'Field Bean(Broad Bean, Faba Bean)',
@@ -215,51 +212,38 @@ export default function UserForm() {
   }
 
   return (
-    // --- 2. APPLY THE STYLE TO THE MAIN CONTAINER ---
     <motion.div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: `url(${BackgroundImage})`,
+        backgroundImage: `url(${silvergrey})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
     >
       <motion.div
-        className="max-w-5x1 w-full bg-gray-500/80 backdrop-blur-sm rounded-2xl border border-gray-300 p-10 shadow-xl"
+        className="max-w-4xl w-full bg-gray-500/80 rounded-2xl border border-gray-300 p-10 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">FEED</h1>
-          <p className="text-gray-600">Please enter feed information below</p>
-        </motion.div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-center flex-1">
+            <div className="flex items-center justify-center space-x-3 mb-2">
+              <Weight className="w-8 h-8 text-white" />
+              <h1 className="text-3xl font-bold text-white">FEED</h1>
+            </div>
+            <p className="text-white">Please enter feed information below</p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <motion.div
-            className="bg-gray-200/80 border border-gray-300 rounded-lg p-4 mb-6"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-          >
-            <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-gray-300/80 rounded-full flex items-center justify-center mt-0.5">
-                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-              </div>
-              <div>
-                <p className="text-gray-700 text-sm font-medium mb-1">How to fill the form:</p>
-                <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
-                  <li><strong>First row is required</strong> - fill feed type, quantity, and unit</li>
-                  <li>Click "New Entry" to add more feed entries as needed</li>
-                  <li>Remove any extra rows you don't need</li>
-                </ul>
-              </div>
-            </div>
+          <motion.div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6">
+            <p className="text-gray-700 text-sm font-medium mb-2">How to fill the form:</p>
+            <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
+              <li><strong>First row is required</strong> - fill feed type, quantity, and unit</li>
+              <li>Click "New Entry" to add more feed entries as needed</li>
+              <li>Remove any extra rows you don't need</li>
+            </ul>
           </motion.div>
 
           <motion.div
@@ -269,35 +253,36 @@ export default function UserForm() {
             transition={{ delay: 0.3 }}
           >
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Feed Type</h3>
-              <p className="text-gray-500 text-sm">Select type of feed given to poultry</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Feed Type</h3>
+              <p className="text-gray-200 text-sm">Select type of feed given to poultry</p>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Unit</h3>
-              <p className="text-gray-500 text-sm">Select weight unit</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Unit</h3>
+              <p className="text-gray-200 text-sm">Select weight unit</p>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Quantity</h3>
-              <p className="text-gray-500 text-sm">Enter quantity (numbers only)</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Quantity</h3>
+              <p className="text-gray-200 text-sm">Enter quantity (numbers only)</p>
             </div>
           </motion.div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {feedRows.map((row, index) => (
               <motion.div
                 key={index}
-                className={`bg-white/80 border rounded-lg p-4 transition-all duration-300 ${index === 0
-                  ? (isFirstRowComplete ? 'border-green-400 bg-green-50/80' : 'border-red-400 bg-red-50/80')
-                  : (row.feed_type && row.quantity && row.unit ? 'border-green-300 bg-green-50/80' : 'border-gray-300 hover:bg-gray-50/80')
+                className={`bg-white border border-gray-300 rounded-lg p-4 ${index === 0 && !isFirstRowComplete ? 'border-gray-400 bg-red-50' :
+                  (row.feed_type && row.quantity && row.unit ? 'border-gray-400 bg-gray-50' : 'border-gray-300')
                   }`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + (index * 0.05) }}
+                transition={{ delay: index * 0.05 }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-gray-700 font-medium">Feed Entry {index + 1}</h4>
-                    {isFirstRowComplete && index === 0 && (<CheckCircle className="w-4 h-4 text-green-600" />)}
+                    <h4 className="text-gray-800 font-medium">Feed Entry {index + 1}</h4>
+                    {row.feed_type && row.quantity && row.unit && (
+                      <CheckCircle className="w-4 h-4 text-gray-600" />
+                    )}
                   </div>
                   {index === 0 ? (
                     <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full border border-red-300">Required</span>
@@ -321,11 +306,14 @@ export default function UserForm() {
                     <select
                       value={row.feed_type}
                       onChange={(e) => updateFeedRow(index, 'feed_type', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-200/80 ${row.feed_type ? 'border-green-400' : 'border-gray-300'}`}
+                      className={`w-full px-4 py-3 bg-gray-50 border ${row.feed_type ? 'border-gray-400' : 'border-gray-300'
+                        } rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100`}
                       required={index === 0}
                     >
                       <option value="" className="text-gray-500">{index === 0 ? "Select feed type" : "Select feed type (optional)"}</option>
-                      {feedOptions.map(option => (<option key={option} value={option} className="text-gray-800">{option}</option>))}
+                      {feedOptions.map(option => (
+                        <option key={option} value={option} className="text-gray-800">{option}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -335,11 +323,14 @@ export default function UserForm() {
                     <select
                       value={row.unit}
                       onChange={(e) => updateFeedRow(index, 'unit', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all appearance-none cursor-pointer ${row.unit ? 'border-green-400' : 'border-gray-300'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${row.unit ? 'border-gray-400' : 'border-gray-300'
+                        } rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100`}
                       required={index === 0}
                     >
                       <option value="" className="text-gray-500">{index === 0 ? "Select unit" : "Select unit (optional)"}</option>
-                      {unitOptions.map(unit => (<option key={unit} value={unit} className="text-gray-800">{unit}</option>))}
+                      {unitOptions.map(unit => (
+                        <option key={unit} value={unit} className="text-gray-800">{unit}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -349,7 +340,8 @@ export default function UserForm() {
                       type="number"
                       value={row.quantity}
                       onChange={(e) => updateFeedRow(index, 'quantity', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all ${row.quantity ? 'border-green-400' : 'border-gray-300'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${row.quantity ? 'border-gray-400' : 'border-gray-300'
+                        } rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all hover:bg-gray-100`}
                       placeholder={index === 0 ? "0000" : "Enter quantity (optional)"}
                       min="0"
                       step="any"
@@ -359,10 +351,11 @@ export default function UserForm() {
                 </div>
               </motion.div>
             ))}
+
             <div className="flex justify-left">
               <motion.button
                 type="button"
-                className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg transition-all"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold p-2 rounded-lg transition-all"
                 onClick={handleAddEntry}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -371,22 +364,6 @@ export default function UserForm() {
               </motion.button>
             </div>
           </div>
-
-          {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length > 0 && (
-            <motion.div
-              className="bg-green-100 border border-green-300 rounded-lg p-4"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
-              </div>
-              <p className="text-green-700 text-sm">
-                All required fields are filled.
-              </p>
-            </motion.div>
-          )}
 
           {submitStatus === 'error' && (
             <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">
@@ -399,14 +376,11 @@ export default function UserForm() {
             type="submit"
             disabled={!canSubmit}
             className={`w-full font-semibold py-4 px-6 rounded-lg transition-all transform flex items-center justify-center space-x-2 shadow-lg ${canSubmit
-              ? 'bg-gray-800 hover:bg-gray-700 text-white hover:scale-105 hover:shadow-xl'
-              : 'bg-gray-400 cursor-not-allowed text-gray-200'
+              ? 'bg-gray-300 hover:bg-gray-300 text-gray-800 hover:scale-105 hover:shadow-xl'
+              : 'bg-gray-400 cursor-not-allowed text-gray-800'
               }`}
             whileHover={{ scale: canSubmit ? 1.05 : 1 }}
             whileTap={{ scale: canSubmit ? 0.95 : 1 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
           >
             {isSubmitting ? (
               <>
