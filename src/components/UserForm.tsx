@@ -15,6 +15,10 @@ import {
   Home
 } from 'lucide-react'
 
+// --- 1. IMPORT THE IMAGE ---
+// This path is based on your folder structure screenshot
+import BackgroundImage from '../assets/silvergrey.jpg'
+
 const feedOptions = [
   'Corn(Maize)', 'Soyameal', 'Cotton', 'Field Bean(Broad Bean, Faba Bean)',
   'Field Pea', 'Fodder Legumes', 'Fodderbeet', 'Groundnut(Peanut)', 'Lentil',
@@ -211,11 +215,17 @@ export default function UserForm() {
   }
 
   return (
-    // --- THEME CHANGE: Main container background ---
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
-      {/* --- THEME CHANGE: Form container styling --- */}
+    // --- 2. APPLY THE STYLE TO THE MAIN CONTAINER ---
+    <motion.div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${BackgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
       <motion.div
-        className="max-w-full w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
+        className="max-w-5x1 w-full bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-300 p-10 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -226,21 +236,19 @@ export default function UserForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          {/* --- THEME CHANGE: Header text --- */}
           <h1 className="text-3xl font-bold text-gray-800 mb-2">FEED</h1>
           <p className="text-gray-600">Please enter feed information below</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* --- THEME CHANGE: Instructions box --- */}
           <motion.div
-            className="bg-gray-300 border border-gray-300 rounded-lg p-4 mb-6"
+            className="bg-gray-200/80 border border-gray-300 rounded-lg p-4 mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
             <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center mt-0.5">
+              <div className="w-5 h-5 bg-gray-300/80 rounded-full flex items-center justify-center mt-0.5">
                 <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
               </div>
               <div>
@@ -261,7 +269,6 @@ export default function UserForm() {
             transition={{ delay: 0.3 }}
           >
             <div className="text-center">
-              {/* --- THEME CHANGE: Column header text --- */}
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Feed Type</h3>
               <p className="text-gray-500 text-sm">Select type of feed given to poultry</p>
             </div>
@@ -279,10 +286,9 @@ export default function UserForm() {
             {feedRows.map((row, index) => (
               <motion.div
                 key={index}
-                // --- THEME CHANGE: Conditional borders for input rows ---
-                className={`bg-white border rounded-lg p-4 transition-all duration-300 ${index === 0
-                  ? (isFirstRowComplete ? 'border-gray-200 bg-white' : 'border-gray-400 bg-gray-200')
-                  : (row.feed_type && row.quantity && row.unit ? 'border-green-300 bg-green-50' : 'border-gray-300 hover:bg-gray-50')
+                className={`bg-white/80 border rounded-lg p-4 transition-all duration-300 ${index === 0
+                  ? (isFirstRowComplete ? 'border-green-400 bg-green-50/80' : 'border-red-400 bg-red-50/80')
+                  : (row.feed_type && row.quantity && row.unit ? 'border-green-300 bg-green-50/80' : 'border-gray-300 hover:bg-gray-50/80')
                   }`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -315,8 +321,7 @@ export default function UserForm() {
                     <select
                       value={row.feed_type}
                       onChange={(e) => updateFeedRow(index, 'feed_type', e.target.value)}
-                      // --- THEME CHANGE: Select input fields ---
-                      className={`w-full px-4 py-3 bg-gray-200 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100 ${row.feed_type ? 'border-gray-200' : 'border-gray-300'}`}
+                      className={`w-full px-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-200/80 ${row.feed_type ? 'border-green-400' : 'border-gray-300'}`}
                       required={index === 0}
                     >
                       <option value="" className="text-gray-500">{index === 0 ? "Select feed type" : "Select feed type (optional)"}</option>
@@ -330,7 +335,7 @@ export default function UserForm() {
                     <select
                       value={row.unit}
                       onChange={(e) => updateFeedRow(index, 'unit', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-gray-200 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all appearance-none cursor-pointer hover:bg-gray-100 ${row.unit ? 'border-gray-200' : 'border-gray-300'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all appearance-none cursor-pointer ${row.unit ? 'border-green-400' : 'border-gray-300'}`}
                       required={index === 0}
                     >
                       <option value="" className="text-gray-500">{index === 0 ? "Select unit" : "Select unit (optional)"}</option>
@@ -344,7 +349,7 @@ export default function UserForm() {
                       type="number"
                       value={row.quantity}
                       onChange={(e) => updateFeedRow(index, 'quantity', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 bg-gray-200 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all hover:bg-gray-100 ${row.quantity ? 'border-gray-200' : 'border-gray-300'}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-gray-100/80 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all ${row.quantity ? 'border-green-400' : 'border-gray-300'}`}
                       placeholder={index === 0 ? "0000" : "Enter quantity (optional)"}
                       min="0"
                       step="any"
@@ -357,7 +362,6 @@ export default function UserForm() {
             <div className="flex justify-left">
               <motion.button
                 type="button"
-                // --- THEME CHANGE: New entry button ---
                 className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg transition-all"
                 onClick={handleAddEntry}
                 whileHover={{ scale: 1.05 }}
@@ -370,7 +374,7 @@ export default function UserForm() {
 
           {feedRows.filter(row => row.feed_type && row.quantity && row.unit).length > 0 && (
             <motion.div
-              className="bg-emerald-100 border border-green-300 rounded-lg p-4"
+              className="bg-green-100 border border-green-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -394,10 +398,9 @@ export default function UserForm() {
           <motion.button
             type="submit"
             disabled={!canSubmit}
-            // --- THEME CHANGE: Submit button ---
             className={`w-full font-semibold py-4 px-6 rounded-lg transition-all transform flex items-center justify-center space-x-2 shadow-lg ${canSubmit
-              ? 'bg-gray-200 hover:bg-gray-200 text-gray-800 hover:scale-105 hover:shadow-xl'
-              : 'bg-gray-400 cursor-not-allowed text-gray-800'
+              ? 'bg-gray-800 hover:bg-gray-700 text-white hover:scale-105 hover:shadow-xl'
+              : 'bg-gray-400 cursor-not-allowed text-gray-200'
               }`}
             whileHover={{ scale: canSubmit ? 1.05 : 1 }}
             whileTap={{ scale: canSubmit ? 0.95 : 1 }}
