@@ -225,7 +225,7 @@ export default function UserForm() {
       }}
     >
       <motion.div
-        className="max-w-5x1 w-full bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-300 p-10 shadow-xl"
+        className="max-w-5x1 w-full bg-gray-500/80 backdrop-blur-sm rounded-2xl border border-gray-300 p-10 shadow-xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
