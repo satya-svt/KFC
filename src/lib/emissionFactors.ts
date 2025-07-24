@@ -1,5 +1,4 @@
-// Emission factors for different feed types
-// Values are in appropriate units for emission calculation
+// --- EXISTING FEED FACTORS ---
 export const EMISSION_FACTORS: Record<string, number> = {
   'Soyameal': 1.8,
   'Corn(Maize)': 0.271287,
@@ -33,15 +32,53 @@ export const EMISSION_FACTORS: Record<string, number> = {
   'Yams and Cocoyams': 0.038263,
   'Groundnut cake': 0.1,
   'palm kernel cake': 0.1
-}
+};
 
-// Helper function to get emission factor for a feed type
+// --- NEW MANURE FACTORS ---
+export const MANURE_EMISSION_FACTORS: Record<string, number> = {
+  'Aerobic treatment - forced aeration': 0.00116,
+  'Aerobic treatment - natural aeration': 0.00232,
+  'Anaerobic Digester, High leakage, low quality technology, high quality gas-tight storage technology': 0.00659,
+  'Anaerobic Digester, High leakage, low quality technology, low quality gas-tight storage technology': 0.00744,
+  'Anaerobic Digester, High leakage, low quality technology, open storage': 0.00887,
+  'Anaerobic Digester, Low leakage, High quality gas-tight storage, best complete industrial technology': 0.00081,
+  'Anaerobic Digester, Low leakage, High quality industrial technology, low quality gas-tight storage technology': 0.00109,
+  'Anaerobic Digester, Low leakage, High quality industrial technology, open storage': 0.00309,
+  'Composting - In vessel (forced aeration)': 0.00173,
+  'Composting - Intensive windrow': 0.00183,
+  'Composting - Passive windrow (infrequent turning)': 0.00250,
+  'Composting - Static pile (Forced aeration)': 0.00366,
+  'Daily spread': 0.00034,
+  'Deep bedding - active mixing (< 1 month)': 0.02117,
+  'Deep bedding - active mixing (> 1 month)': 0.04381,
+  'Deep bedding - no mixing (< 1 month)': 0.00727,
+  'Deep bedding - no mixing (> 1 month)': 0.02991,
+  'Dry lot': 0.00564,
+  'Exporting manure off-farm - zero on farm emissions.': 0.00000,
+  'Liquid slurry with cover': 0.02202,
+  'Liquid slurry with natural crust cover': 0.01798,
+  'Liquid slurry without natural crust cover': 0.02759,
+  'Pasture': 0.00032,
+  'Pit storage below animal confinements (1 month)': 0.01056,
+  'Pit storage below animal confinements (12 months)': 0.04353,
+  'Pit storage below animal confinements (3 months)': 0.01931,
+  'Pit storage below animal confinements (4 months)': 0.02200,
+  'Pit storage below animal confinements (6 months)': 0.02805,
+  'Poultry manure with litter': 0.00217,
+  'Poultry manure without litter': 0.00252,
+  'Solid storage': 0.00529,
+  'Solid storage - Additives': 0.00250,
+  'Solid storage - Bulking addition': 0.00183,
+  'Solid storage - Covered/compacted': 0.00501,
+  'Uncovered anaerobic lagoon': 0.05207,
+};
+
+// --- EXISTING FEED HELPER FUNCTIONS ---
 export const getEmissionFactor = (feedType: string): number => {
-  return EMISSION_FACTORS[feedType] || 0
-}
+  return EMISSION_FACTORS[feedType] || 0;
+};
 
-// Helper function to calculate feed emission
 export const calculateFeedEmission = (quantity: number, feedType: string): number => {
-  const emissionFactor = getEmissionFactor(feedType)
-  return quantity * emissionFactor
-}
+  const emissionFactor = getEmissionFactor(feedType);
+  return quantity * emissionFactor;
+};
