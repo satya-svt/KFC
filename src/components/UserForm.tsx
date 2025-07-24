@@ -117,7 +117,9 @@ export default function UserForm() {
   const handleAddEntry = () => {
     setFeedRows([...feedRows, { feed_type: '', quantity: '', unit: '' }])
   }
-
+  const isFormValid = feedRows.every(row =>
+    row.feed_type && row.quantity && row.unit
+  )
   const handleRemoveEntry = (index: number) => {
     setFeedRows(prev => prev.filter((_, i) => i !== index))
   }
@@ -199,7 +201,7 @@ export default function UserForm() {
             <div className="space-y-4">
               <motion.button
                 onClick={() => navigate('/manure')}
-                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg"
               >
                 Continue to Manure Management
               </motion.button>
@@ -248,7 +250,7 @@ export default function UserForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <motion.div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6">
+          <motion.div className="bg-white border border-gray-300 rounded-lg p-4 mb-6">
             <p className="text-gray-700 text-sm font-medium mb-2">How to fill the form:</p>
             <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
               <li><strong>First row is required</strong> - fill feed type, quantity, and unit</li>
@@ -366,7 +368,7 @@ export default function UserForm() {
             <div className="flex justify-left">
               <motion.button
                 type="button"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold p-2 rounded-lg transition-all"
+                className="bg-white hover:bg-gray-200 text-gray-800 font-semibold p-2 rounded-lg transition-all"
                 onClick={handleAddEntry}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -375,6 +377,30 @@ export default function UserForm() {
               </motion.button>
             </div>
           </div>
+
+
+          {isFormValid && (
+            <motion.div
+              className="bg-white border border-gray-300 rounded-lg p-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-green-800" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
+              </div>
+              <p className="text-gray-800 text-sm">
+                All required fields are filled.
+              </p>
+            </motion.div>
+          )}
+
+          {submitStatus === 'error' && (
+            <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{errorMessage}</span>
+            </motion.div>
+          )}
 
           {submitStatus === 'error' && (
             <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">

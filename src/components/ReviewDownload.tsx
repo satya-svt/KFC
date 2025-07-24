@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getAllAutoSavedData } from '../lib/autoSave'
-import { getCurrentUserEmail, getUserProfile } from '../lib/supabase'
+import { getCurrentUserEmail } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import {
   CheckCircle,
   Download,
@@ -132,7 +133,7 @@ export default function ReviewDownload() {
   const [allData, setAllData] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [showReview, setShowReview] = useState(false)
-  const [userInfo, setUserInfo] = useState<{ email: string | null, profile: any }>({
+  const [userInfo, setUserInfo] = useState<{ email: string | null, profile: { organization_name?: string } | null }>({
     email: null,
     profile: null
   })
@@ -144,9 +145,28 @@ export default function ReviewDownload() {
       try {
         const data = await getAllAutoSavedData(entryId)
         const email = await getCurrentUserEmail()
-        const profile = getUserProfile()
-        setAllData(data)
-        setUserInfo({ email, profile })
+
+        // Get authenticated user
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user) {
+          // Fetch profile data including organization_name
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('organization_name')
+            .eq('id', user.id)
+            .single()
+
+          if (error) {
+            console.error('Error fetching profile:', error)
+          }
+
+          setAllData(data)
+          setUserInfo({
+            email,
+            profile: profile || null
+          })
+        }
       } catch (error) {
         console.error('Error loading data:', error)
       } finally {
@@ -210,7 +230,14 @@ export default function ReviewDownload() {
     }
   }
 
-  const sections = [{ key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-600', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] }, { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-600', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] }, { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-600', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] }, { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-600', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['S.no', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] }, { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-600', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['S.no', 'Route', 'Vehicle Type', 'Distance'] }];
+  const sections = [
+    { key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-600', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] },
+    { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-600', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] },
+    { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-600', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] },
+    { key: 'waste', title: 'Waste Management', icon: Droplets, color: 'text-cyan-600', data: formatDataForDisplay(allData.waste, 'waste'), headers: ['S.no', 'Waste Water', 'Oxygen Demand', 'ETP', 'Treatment Type'] },
+    { key: 'transport', title: 'Transport', icon: Truck, color: 'text-purple-600', data: formatDataForDisplay(allData.transport, 'transport'), headers: ['S.no', 'Route', 'Vehicle Type', 'Distance'] }
+  ];
+
   const completedSections = sections.filter(section => section.data.length > 0);
 
   if (loading) {
@@ -227,14 +254,12 @@ export default function ReviewDownload() {
   }
 
   return (
-    // --- THEME CHANGE: Main container background ---
     <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
       style={{
         backgroundImage: `url(${silvergrey})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}>
-      {/* --- THEME CHANGE: Content container styling --- */}
       <motion.div
         className="max-w-4xl w-full bg-white rounded-2xl border border-gray-400 p-8 shadow-xl"
         style={{
@@ -254,14 +279,13 @@ export default function ReviewDownload() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              {/* --- THEME CHANGE: Header --- */}
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-gray-800" />
               </div>
               <h1 className="text-3xl font-bold text-white mb-2">Review & Download Your Submission</h1>
               <p className="text-gray-100">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
-            {/* --- THEME CHANGE: Info box --- */}
+
             <motion.div
               className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6"
               initial={{ opacity: 0, y: 20 }}
@@ -273,7 +297,10 @@ export default function ReviewDownload() {
                   <Building2 className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="text-gray-500 text-sm">Organization</p>
-                    <p className="text-gray-800 font-medium">{userInfo.profile?.organization_name || 'N/A'}</p>
+                    <p className="text-gray-800 font-medium">
+                      {userInfo.profile?.organization_name ||
+                        (userInfo.profile ? 'No organization set' : 'Profile not loaded')}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -285,7 +312,7 @@ export default function ReviewDownload() {
                 </div>
               </div>
             </motion.div>
-            {/* --- THEME CHANGE: Completion status box --- */}
+
             <motion.div
               className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -300,11 +327,11 @@ export default function ReviewDownload() {
                 ({completedSections.length} of 5 sections completed)
               </p>
             </motion.div>
+
             <div className="space-y-4">
-              {/* --- THEME CHANGE: Buttons --- */}
               <motion.button
                 onClick={() => setShowReview(true)}
-                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2"
+                className="w-full bg-black/100 hover:bg-black/100 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -340,7 +367,7 @@ export default function ReviewDownload() {
               <h2 className="text-2xl font-bold text-white">Submission Review</h2>
               <div></div>
             </motion.div>
-            {/* --- THEME CHANGE: Scrollable area and data containers --- */}
+
             <div className="space-y-6 max-h-96 overflow-y-auto pr-4">
               {completedSections.map((section, index) => {
                 const Icon = section.icon;
@@ -392,7 +419,7 @@ export default function ReviewDownload() {
                   </motion.div>
                 );
               })}
-              {/* --- THEME CHANGE: Download section --- */}
+
               <motion.div
                 className="bg-gray-50 border border-gray-200 rounded-lg p-6 mt-6"
                 initial={{ opacity: 0, y: 20 }}

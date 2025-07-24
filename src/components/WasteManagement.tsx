@@ -246,7 +246,7 @@ export default function WasteManagement() {
             <div className="space-y-4">
               <motion.button
                 onClick={() => navigate('/transport')}
-                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg"
               >
                 Continue to Transport
               </motion.button>
@@ -295,7 +295,7 @@ export default function WasteManagement() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <motion.div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6">
+          <motion.div className="bg-white border border-gray-300 rounded-lg p-4 mb-6">
             <p className="text-gray-700 text-sm font-medium mb-2">Instructions:</p>
             <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
               <li>Enter the amount of waste water treated in litres</li>
@@ -442,8 +442,8 @@ export default function WasteManagement() {
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-gray-800" />
-                <h4 className="text-gray-800 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-green-800" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-gray-800 text-sm">
                 All required fields are filled.

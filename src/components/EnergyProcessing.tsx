@@ -219,7 +219,7 @@ export default function EnergyProcessing() {
             <div className="space-y-4">
               <motion.button
                 onClick={() => navigate('/waste')}
-                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg"
               >
                 Continue to Waste Management
               </motion.button>
@@ -280,7 +280,7 @@ export default function EnergyProcessing() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <motion.div
-            className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6"
+            className="bg-white border border-gray-300 rounded-lg p-4 mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -365,11 +365,16 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Hatchery Plant')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-100 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Hatchery Plant')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
-
+                  {/* After Hatchery Plant New Entry button */}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-1">
+                      <div className="border-t-2 border-gray-200 my-2"></div>
+                    </td>
+                  </tr>
                   {farmRows.map((row, rindex) => {
                     const sectionClass = sectionBgClasses[0].row;
                     const blockClass = sectionBgClasses[0].block;
@@ -410,11 +415,16 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Farm')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-100 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Farm')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
-
+                  {/* After Farm New Entry button */}
+                  <tr>
+                    <td colSpan={5} className="px-6 py-1">
+                      <div className="border-t-2 border-gray-200 my-2"></div>
+                    </td>
+                  </tr>
                   {processingRows.map((row, rindex) => {
                     const sectionClass = sectionBgClasses[1].row;
                     const blockClass = sectionBgClasses[1].block;
@@ -455,7 +465,7 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Processing Plant')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-100 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Processing Plant')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
@@ -466,13 +476,13 @@ export default function EnergyProcessing() {
 
           {isFormValid && (
             <motion.div
-              className="bg-gray-100 border border-gray-300 rounded-lg p-4"
+              className="bg-white border border-gray-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-gray-800" />
-                <h4 className="text-gray-800 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-green-800" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
               </div>
               <p className="text-gray-800 text-sm">
                 All required fields are filled.
