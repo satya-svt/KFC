@@ -19,6 +19,8 @@ import {
   Building2,
   Calendar
 } from 'lucide-react'
+import containerImage from '../assets/737373.jpg'
+import silvergrey from '../assets/silvergrey.jpg'
 
 // Utility functions for download formats
 import jsPDF from 'jspdf'
@@ -213,7 +215,12 @@ export default function ReviewDownload() {
 
   if (loading) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     );
@@ -221,10 +228,20 @@ export default function ReviewDownload() {
 
   return (
     // --- THEME CHANGE: Main container background ---
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${silvergrey})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
       {/* --- THEME CHANGE: Content container styling --- */}
       <motion.div
         className="max-w-4xl w-full bg-white rounded-2xl border border-gray-400 p-8 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'top right -100px',
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -238,11 +255,11 @@ export default function ReviewDownload() {
               transition={{ delay: 0.1 }}
             >
               {/* --- THEME CHANGE: Header --- */}
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-gray-800" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Review & Download Your Submission</h1>
-              <p className="text-gray-600">Your data has been successfully saved. Review or download your submission below.</p>
+              <h1 className="text-3xl font-bold text-white mb-2">Review & Download Your Submission</h1>
+              <p className="text-gray-100">Your data has been successfully saved. Review or download your submission below.</p>
             </motion.div>
             {/* --- THEME CHANGE: Info box --- */}
             <motion.div
@@ -270,16 +287,16 @@ export default function ReviewDownload() {
             </motion.div>
             {/* --- THEME CHANGE: Completion status box --- */}
             <motion.div
-              className="bg-green-100 border border-green-300 rounded-lg p-4 mb-8"
+              className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-8"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h3 className="text-green-800 font-medium">Submission Complete</h3>
+                <CheckCircle className="w-5 h-5 text-gray-600" />
+                <h3 className="text-gray-800 font-medium">Submission Complete</h3>
               </div>
-              <p className="text-green-700 text-sm">
+              <p className="text-gray-800 text-sm">
                 ({completedSections.length} of 5 sections completed)
               </p>
             </motion.div>
@@ -320,7 +337,7 @@ export default function ReviewDownload() {
                 <ArrowLeft className="w-5 h-5" />
                 <span>Back</span>
               </motion.button>
-              <h2 className="text-2xl font-bold text-gray-800">Submission Review</h2>
+              <h2 className="text-2xl font-bold text-white">Submission Review</h2>
               <div></div>
             </motion.div>
             {/* --- THEME CHANGE: Scrollable area and data containers --- */}

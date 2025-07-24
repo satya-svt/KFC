@@ -13,6 +13,8 @@ import {
   Home,
   Trash2
 } from 'lucide-react'
+import containerImage from '../assets/737373.jpg'
+import silvergrey from '../assets/silvergrey.jpg'
 
 const vehicleTypeOptions = [
   'LGV ( < 3.5 tons ) - Diesel',
@@ -185,7 +187,12 @@ export default function Transport() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
@@ -196,8 +203,8 @@ export default function Transport() {
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
         <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-800" />
             </div>
             <p className="text-gray-600 mb-6">Transport data has been submitted</p>
             <div className="space-y-4">
@@ -223,10 +230,20 @@ export default function Transport() {
 
   return (
     // --- THEME CHANGE: Main container background ---
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${silvergrey})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
       {/* --- THEME CHANGE: Form container styling --- */}
       <motion.div
         className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -240,9 +257,9 @@ export default function Transport() {
           <div className="flex items-center justify-center space-x-3 mb-2">
             {/* --- THEME CHANGE: Header icon and text --- */}
             <Truck className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-800">Transport</h1>
+            <h1 className="text-3xl font-bold text-white">Transport</h1>
           </div>
-          <p className="text-gray-600">Record your transportation data</p>
+          <p className="text-gray-200">Record your transportation data</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -362,7 +379,7 @@ export default function Transport() {
               <div className="absolute bottom-6 left-6 z-10">
                 <motion.button
                   type="button"
-                  className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg"
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold p-2 rounded-lg transition-all"
                   onClick={handleAddEntry}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -375,15 +392,15 @@ export default function Transport() {
 
           {isFormValid && (
             <motion.div
-              className="bg-green-100 border border-green-300 rounded-lg p-4"
+              className="bg-gray-100 border border-gray-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-gray-800" />
+                <h4 className="text-gray-800 font-medium">Ready to Submit</h4>
               </div>
-              <p className="text-green-700 text-sm">
+              <p className="text-gray-700 text-sm">
                 All required fields are filled.
               </p>
             </motion.div>

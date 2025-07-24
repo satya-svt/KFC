@@ -13,6 +13,8 @@ import {
   Trash2,
   Home
 } from 'lucide-react'
+import containerImage from '../assets/737373.jpg'
+import silvergrey from '../assets/silvergrey.jpg'
 
 const energyTypeOptions = [
   'Electricity (grid)',
@@ -194,7 +196,12 @@ export default function EnergyProcessing() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
@@ -205,16 +212,16 @@ export default function EnergyProcessing() {
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
         <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-800" />
             </div>
             <p className="text-gray-600 mb-6">Energy & processing data has been submitted</p>
             <div className="space-y-4">
               <motion.button
-                onClick={() => navigate('/transport')}
+                onClick={() => navigate('/waste')}
                 className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg"
               >
-                Continue to Transport
+                Continue to Waste Management
               </motion.button>
               <motion.button
                 onClick={() => navigate('/')}
@@ -241,9 +248,19 @@ export default function EnergyProcessing() {
   ]
 
   return (
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${silvergrey})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
       <motion.div
         className="max-w-6xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -256,9 +273,9 @@ export default function EnergyProcessing() {
         >
           <div className="flex items-center justify-center space-x-3 mb-2">
             <Zap className="w-8 h-8 text-yellow-500" />
-            <h1 className="text-3xl font-bold text-gray-800">Energy & Processing</h1>
+            <h1 className="text-3xl font-bold text-white">Energy & Processing</h1>
           </div>
-          <p className="text-gray-600">Record your energy consumption data</p>
+          <p className="text-gray-200">Record your energy consumption data</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -348,7 +365,7 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Hatchery Plant')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Hatchery Plant')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
@@ -393,7 +410,7 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Farm')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Farm')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
@@ -438,7 +455,7 @@ export default function EnergyProcessing() {
                   <tr>
                     <td colSpan={5} className="px-6 py-2">
                       <div className="flex justify-left">
-                        <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Processing Plant')}>+ New Entry</motion.button>
+                        <motion.button type="button" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg text-sm" onClick={() => handleAddEntry('Processing Plant')}>+ New Entry</motion.button>
                       </div>
                     </td>
                   </tr>
@@ -449,16 +466,16 @@ export default function EnergyProcessing() {
 
           {isFormValid && (
             <motion.div
-              className="bg-green-100 border border-green-300 rounded-lg p-4"
+              className="bg-gray-100 border border-gray-300 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-gray-800" />
+                <h4 className="text-gray-800 font-medium">Ready to Submit</h4>
               </div>
-              <p className="text-green-700 text-sm">
-                All required facility entries configured and ready for submission.
+              <p className="text-gray-800 text-sm">
+                All required fields are filled.
               </p>
             </motion.div>
           )}

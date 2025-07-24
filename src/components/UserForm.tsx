@@ -15,6 +15,7 @@ import {
   Home
 } from 'lucide-react'
 import silvergrey from '../assets/silvergrey.jpg'
+import containerImage from '../assets/737373.jpg'
 
 const feedOptions = [
   'Corn(Maize)', 'Soyameal', 'Cotton', 'Field Bean(Broad Bean, Faba Bean)',
@@ -175,7 +176,12 @@ export default function UserForm() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
@@ -186,8 +192,8 @@ export default function UserForm() {
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
         <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-800" />
             </div>
             <p className="text-gray-600 mb-6">Feed data has been submitted</p>
             <div className="space-y-4">
@@ -221,7 +227,12 @@ export default function UserForm() {
       }}
     >
       <motion.div
-        className="max-w-4xl w-full bg-gray-500/80 rounded-2xl border border-gray-300 p-10 shadow-xl"
+        className="max-w-4xl w-full rounded-2xl border border-gray-300 p-10 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}

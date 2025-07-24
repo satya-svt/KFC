@@ -12,6 +12,8 @@ import {
   Recycle,
   Home
 } from 'lucide-react'
+import containerImage from '../assets/737373.jpg';
+import silvergrey from '../assets/silvergrey.jpg'
 
 const manureSystemOptions = [
   'Aerobic treatment - forced aeration',
@@ -174,7 +176,12 @@ export default function ManureManagement() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
@@ -185,8 +192,8 @@ export default function ManureManagement() {
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
         <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-800" />
             </div>
             <p className="text-gray-600 mb-6">Manure management data has been submitted</p>
             <div className="space-y-4">
@@ -211,9 +218,19 @@ export default function ManureManagement() {
   }
 
   return (
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${silvergrey})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
       <motion.div
         className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -222,9 +239,9 @@ export default function ManureManagement() {
           <div className="text-center flex-1">
             <div className="flex items-center justify-center space-x-3 mb-2">
               <Recycle className="w-8 h-8 text-green-600" />
-              <h1 className="text-3xl font-bold text-gray-800">Manure Management</h1>
+              <h1 className="text-3xl font-bold text-white">Manure Management</h1>
             </div>
-            <p className="text-gray-600">Record your manure management system(s)</p>
+            <p className="text-gray-200">Record your manure management system(s)</p>
           </div>
         </div>
 
@@ -317,7 +334,7 @@ export default function ManureManagement() {
             <div className="flex justify-left">
               <motion.button
                 type="button"
-                className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg transition-all"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold p-2 rounded-lg transition-all"
                 onClick={handleAddEntry}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase, getCurrentUserEmail, getUserProfile } from '../lib/supabase'
 import { autoSaveFormData, loadAutoSavedData, clearAutoSavedData, saveFormDataImmediately } from '../lib/autoSave'
@@ -11,9 +11,10 @@ import {
   Droplets,
   Recycle,
   Plus,
-  Home,
-  Trash2
+  Home
 } from 'lucide-react'
+import silvergrey from '../assets/silvergrey.jpg'
+import containerImage from '../assets/737373.jpg'
 
 const etpOptions = [
   'Chemical',
@@ -39,12 +40,13 @@ interface WasteData {
 
 export default function WasteManagement() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [wasteRows, setWasteRows] = useState<WasteData[]>([
     {
-      wasteWaterTreated: '',
-      oxygenDemand: '',
-      etp: '',
-      waterTreatmentType: ''
+      wasteWaterTreated: '1,00,00,000',
+      oxygenDemand: '250',
+      etp: 'Chemical',
+      waterTreatmentType: 'None - stagnant sewer'
     }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -60,9 +62,10 @@ export default function WasteManagement() {
     const loadUserProfile = async () => {
       const profile = getUserProfile()
       setUserProfile(profile)
+
       try {
         const savedData = await loadAutoSavedData('waste', entryId)
-        if (savedData && Array.isArray(savedData) && savedData.length > 0) {
+        if (savedData && Array.isArray(savedData)) {
           setWasteRows(savedData)
         }
       } catch (error) {
@@ -83,8 +86,17 @@ export default function WasteManagement() {
         saveFormDataImmediately('waste', wasteRows, entryId)
       }
     }
+
+    const unlisten = () => {
+      handleBeforeUnload()
+    }
+
     window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      unlisten()
+    }
   }, [wasteRows, entryId])
 
   React.useEffect(() => {
@@ -110,8 +122,8 @@ export default function WasteManagement() {
       {
         wasteWaterTreated: '',
         oxygenDemand: '',
-        etp: '',
-        waterTreatmentType: ''
+        etp: etpOptions[0],
+        waterTreatmentType: waterTreatmentOptions[0]
       }
     ])
   }
@@ -126,10 +138,11 @@ export default function WasteManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (isSubmitting) return
 
     if (!isFormValid) {
-      setErrorMessage('Please complete all fields for each entry.')
+      setErrorMessage('Please complete all waste management fields.')
       setSubmitStatus('error')
       return
     }
@@ -142,34 +155,56 @@ export default function WasteManagement() {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
-      const dataToInsert = wasteRows.flatMap(row => ([
+      const dataToInsert = wasteRows.flatMap(row => [
         {
           name: 'Waste Water Treated',
           description: `${row.wasteWaterTreated} litres`,
           category: 'waste_management',
           value: parseFloat(row.wasteWaterTreated.replace(/,/g, '')) || 0,
-          status: 'active', tags: ['waste_water'], priority: 'medium', user_email: userEmail, organization_name: userProfile?.organization_name || null
+          status: 'active',
+          tags: ['waste_water', 'treatment'],
+          priority: 'medium',
+          user_email: userEmail,
+          username: userProfile?.username || null,
+          organization_name: userProfile?.organization_name || null
         },
         {
           name: 'Oxygen Demand (BOD / COD)',
           description: `${row.oxygenDemand} mg / L`,
           category: 'waste_management',
           value: parseFloat(row.oxygenDemand) || 0,
-          status: 'active', tags: ['oxygen_demand'], priority: 'medium', user_email: userEmail, organization_name: userProfile?.organization_name || null
+          status: 'active',
+          tags: ['oxygen_demand', 'BOD', 'COD'],
+          priority: 'medium',
+          user_email: userEmail,
+          username: userProfile?.username || null,
+          organization_name: userProfile?.organization_name || null
         },
         {
           name: 'ETP',
           description: row.etp,
           category: 'waste_management',
-          value: 0, status: 'active', tags: ['etp', row.etp.toLowerCase()], priority: 'medium', user_email: userEmail, organization_name: userProfile?.organization_name || null
+          value: 0,
+          status: 'active',
+          tags: ['ETP', row.etp.toLowerCase()],
+          priority: 'medium',
+          user_email: userEmail,
+          username: userProfile?.username || null,
+          organization_name: userProfile?.organization_name || null
         },
         {
           name: 'Water Treatment Type',
           description: row.waterTreatmentType,
           category: 'waste_management',
-          value: 0, status: 'active', tags: ['water_treatment', row.waterTreatmentType.toLowerCase().replace(/\s+/g, '_')], priority: 'medium', user_email: userEmail, organization_name: userProfile?.organization_name || null
+          value: 0,
+          status: 'active',
+          tags: ['water_treatment', row.waterTreatmentType.toLowerCase().replace(/\s+/g, '_')],
+          priority: 'medium',
+          user_email: userEmail,
+          username: userProfile?.username || null,
+          organization_name: userProfile?.organization_name || null
         }
-      ]))
+      ])
 
       const { error } = await supabase.from('data_rows').insert(dataToInsert)
       if (error) throw error
@@ -188,7 +223,12 @@ export default function WasteManagement() {
 
   if (isLoadingAutoSave) {
     return (
-      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${silvergrey})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
         <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
       </motion.div>
     )
@@ -199,8 +239,8 @@ export default function WasteManagement() {
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
         <motion.div className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-gray-800" />
             </div>
             <p className="text-gray-600 mb-6">Waste management data has been submitted</p>
             <div className="space-y-4">
@@ -225,143 +265,187 @@ export default function WasteManagement() {
   }
 
   return (
-    <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <motion.div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${silvergrey})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
       <motion.div
-        className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
+        className="max-w-4xl w-full rounded-2xl border border-gray-300 p-10 shadow-xl"
+        style={{
+          backgroundImage: `url(${containerImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="flex items-center justify-center space-x-3 mb-2">
-            <Recycle className="w-8 h-8 text-yellow-500" />
-            <h1 className="text-3xl font-bold text-gray-800">Waste Management</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-center flex-1">
+            <div className="flex items-center justify-center space-x-3 mb-2">
+              <Recycle className="w-8 h-8 text-yellow-300" />
+              <h1 className="text-3xl font-bold text-white">Waste Management</h1>
+            </div>
+            <p className="text-gray-200">Record your waste management information</p>
           </div>
-          <p className="text-gray-600">Record your waste management information</p>
-        </motion.div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <motion.div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6">
+            <p className="text-gray-700 text-sm font-medium mb-2">Instructions:</p>
+            <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
+              <li>Enter the amount of waste water treated in litres</li>
+              <li>Specify oxygen demand (BOD/COD) in mg/L</li>
+              <li>Select the type of ETP (Effluent Treatment Plant) used</li>
+              <li>Choose the water treatment method employed</li>
+              <li>Click "+ New Entry" to add more waste management records if needed</li>
+            </ul>
+          </motion.div>
+
           <motion.div
-            className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-6"
-            initial={{ opacity: 0, y: -10 }}
+            className="bg-white border border-gray-300 rounded-lg overflow-hidden relative"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4 }}
           >
-            <div className="flex items-start space-x-3">
-              <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center mt-0.5">
-                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-              </div>
-              <div>
-                <p className="text-gray-700 text-sm font-medium mb-2">Instructions:</p>
-                <ul className="text-gray-600 text-sm space-y-1 list-disc list-inside">
-                  <li>Enter the amount of waste water treated in litres</li>
-                  <li>Specify oxygen demand (BOD/COD) in mg/L</li>
-                  <li>Select the type of ETP (Effluent Treatment Plant) used</li>
-                  <li>Choose the water treatment method employed</li>
-                  <li>Click "+ New Entry" to add more waste management records if needed</li>
-                </ul>
+            <div className="overflow-x-auto pb-20">
+              {wasteRows.map((row, rowIndex) => (
+                <React.Fragment key={rowIndex}>
+                  {rowIndex > 0 && (
+                    <div className="h-0.5 w-full my-2 bg-gray-300 rounded-lg" />
+                  )}
+                  <table className="w-full mb-2">
+                    <tbody>
+                      <tr className="border-b border-gray-300">
+                        <td className="px-6 py-4 text-gray-800 font-medium bg-gray-100 w-1/3">
+                          <div className="flex items-center space-x-2">
+                            <Droplets className="w-5 h-5 text-gray-600" />
+                            <span>Waste Water Treated</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <input
+                            type="text"
+                            value={row.wasteWaterTreated}
+                            onChange={(e) => updateWasteRow(rowIndex, 'wasteWaterTreated', e.target.value)}
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all text-right"
+                            placeholder="Enter amount"
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 font-medium">
+                          litres
+                        </td>
+                        {rowIndex > 0 && (
+                          <td rowSpan={4} className="px-6 py-4 align-top">
+                            <div className="flex flex-col items-end space-y-2">
+                              <motion.button
+                                type="button"
+                                className="bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 p-2 rounded-lg transition-all border border-red-300"
+                                onClick={() => handleRemoveEntry(rowIndex)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                title="Remove entry"
+                              >
+                                Remove
+                              </motion.button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                      <tr className="border-b border-gray-300">
+                        <td className="px-6 py-4 text-gray-800 font-medium bg-gray-100">
+                          <span>Oxygen Demand (BOD / COD)</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <input
+                            type="number"
+                            value={row.oxygenDemand}
+                            onChange={(e) => updateWasteRow(rowIndex, 'oxygenDemand', e.target.value)}
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all text-right"
+                            placeholder="Enter value"
+                            min="0"
+                            step="0.1"
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 font-medium">
+                          mg / L
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-300">
+                        <td className="px-6 py-4 text-gray-800 font-medium bg-gray-100">
+                          <span>ETP</span>
+                        </td>
+                        <td className="px-6 py-4" colSpan={2}>
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select
+                              value={row.etp}
+                              onChange={(e) => updateWasteRow(rowIndex, 'etp', e.target.value)}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all appearance-none cursor-pointer"
+                            >
+                              {etpOptions.map(option => (
+                                <option key={option} value={option} className="text-gray-800">
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 text-gray-800 font-medium bg-gray-100">
+                          <span>Water Treatment type</span>
+                        </td>
+                        <td className="px-6 py-4" colSpan={2}>
+                          <div className="relative">
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                            <select
+                              value={row.waterTreatmentType}
+                              onChange={(e) => updateWasteRow(rowIndex, 'waterTreatmentType', e.target.value)}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all appearance-none cursor-pointer"
+                            >
+                              {waterTreatmentOptions.map(option => (
+                                <option key={option} value={option} className="text-gray-800">
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </React.Fragment>
+              ))}
+              <div className="absolute bottom-6 left-6 z-10">
+                <motion.button
+                  type="button"
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold p-2 rounded-lg transition-all"
+                  onClick={handleAddEntry}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  + New Entry
+                </motion.button>
               </div>
             </div>
           </motion.div>
 
-          <div className="space-y-6">
-            {wasteRows.map((row, rowIndex) => (
-              <motion.div
-                key={rowIndex}
-                className="bg-white border border-gray-300 rounded-lg p-4 relative"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + rowIndex * 0.1 }}
-              >
-                {wasteRows.length > 1 && (
-                  <motion.button
-                    type="button"
-                    onClick={() => handleRemoveEntry(rowIndex)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    title="Remove entry"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </motion.button>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Waste Water Treated (litres)</label>
-                    <input
-                      type="text"
-                      value={row.wasteWaterTreated}
-                      onChange={(e) => updateWasteRow(rowIndex, 'wasteWaterTreated', e.target.value)}
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800"
-                      placeholder="e.g., 100000"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Oxygen Demand (mg / L)</label>
-                    <input
-                      type="number"
-                      value={row.oxygenDemand}
-                      onChange={(e) => updateWasteRow(rowIndex, 'oxygenDemand', e.target.value)}
-                      className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800"
-                      placeholder="e.g., 250"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">ETP</label>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                      <select
-                        value={row.etp}
-                        onChange={(e) => updateWasteRow(rowIndex, 'etp', e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer"
-                      >
-                        <option value="" className="text-gray-500">Select ETP type</option>
-                        {etpOptions.map(option => (<option key={option} value={option}>{option}</option>))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Water Treatment Type</label>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                      <select
-                        value={row.waterTreatmentType}
-                        onChange={(e) => updateWasteRow(rowIndex, 'waterTreatmentType', e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer"
-                      >
-                        <option value="" className="text-gray-500">Select treatment type</option>
-                        {waterTreatmentOptions.map(option => (<option key={option} value={option}>{option}</option>))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div>
-            <motion.button type="button" className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold p-2 rounded-lg text-sm flex items-center space-x-1" onClick={handleAddEntry}>
-              <Plus className="w-4 h-4" />
-              <span>New Entry</span>
-            </motion.button>
-          </div>
-
           {isFormValid && (
             <motion.div
-              className="bg-green-100 border border-green-300 rounded-lg p-4"
+              className="bg-white border border-gray-200 rounded-lg p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
+                <CheckCircle className="w-5 h-5 text-gray-800" />
+                <h4 className="text-gray-800 font-medium">Ready to Submit</h4>
               </div>
-              <p className="text-green-700 text-sm">
+              <p className="text-gray-800 text-sm">
                 All required fields are filled.
               </p>
             </motion.div>
@@ -378,15 +462,18 @@ export default function WasteManagement() {
             type="submit"
             disabled={!isFormValid || isSubmitting}
             className={`w-full font-semibold py-4 px-6 rounded-lg transition-all transform flex items-center justify-center space-x-2 shadow-lg ${isFormValid && !isSubmitting
-              ? 'bg-gray-300 hover:bg-gray-300 text-gray-800 hover:scale-105 hover:shadow-xl'
-              : 'bg-gray-400 cursor-not-allowed text-gray-600'
+              ? 'bg-gray-200 hover:bg-gray-200 text-gray-800 hover:scale-105 hover:shadow-xl'
+              : 'bg-gray-200 cursor-not-allowed text-gray-800'
               }`}
             whileHover={{ scale: isFormValid && !isSubmitting ? 1.05 : 1 }}
             whileTap={{ scale: isFormValid && !isSubmitting ? 0.95 : 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
           >
             {isSubmitting ? (
               <>
-                <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <span>Submitting...</span>
               </>
             ) : !isFormValid ? (
