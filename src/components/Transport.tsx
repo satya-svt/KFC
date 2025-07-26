@@ -20,17 +20,10 @@ const vehicleTypeOptions = [
   'LGV ( < 3.5 tons ) - Diesel',
   'LGV ( < 3.5 tons ) - Petrol',
   'LGV ( < 3.5 tons ) - Electric',
-  'HGV ( > 7.5 tons) - Diesel',
-  'HGV ( > 7.5 tons) - Petrol',
-  'HGV ( > 7.5 tons) - Electric',
-  'Medium Truck (3.5-7.5 tons) - Diesel',
-  'Medium Truck (3.5-7.5 tons) - Petrol',
-  'Medium Truck (3.5-7.5 tons) - Electric',
-  'Motorcycle - Petrol',
-  'Motorcycle - Electric',
-  'Van - Diesel',
-  'Van - Petrol',
-  'Van - Electric'
+  'LGV ( < 3.5 tons ) - CNG',
+  'MGV ( 3.5 - 7.5 tons ) - Diesel',
+  'MGV ( 3.5 - 7.5 tons ) - CNG',
+  'HGV ( > 7.5 tons ) - Diesel',
 ]
 
 const routeOptions = [
