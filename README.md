@@ -1,4 +1,4 @@
-# Survey Web App
+# KFC carbon emission target for g20 summit
 
 A modern survey application built with React, TypeScript, Tailwind CSS, and Supabase.
 
