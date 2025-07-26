@@ -15,21 +15,14 @@ import {
 } from 'lucide-react'
 import silvergrey from '../assets/silvergrey.jpg'
 import containerImage from '../assets/737373.jpg'
+import { calculateWasteWaterEmission, WASTE_WATER_EMISSION_FACTORS } from '../lib/emissionFactors';
 
 const etpOptions = [
   'Chemical',
-  'Biological',
-  'Physical',
-  'Combined'
+  'Biochemical',
 ]
 
-const waterTreatmentOptions = [
-  'None - stagnant sewer',
-  'Primary treatment',
-  'Secondary treatment',
-  'Tertiary treatment',
-  'Advanced treatment'
-]
+const waterTreatmentOptions = Object.keys(WASTE_WATER_EMISSION_FACTORS);
 
 interface WasteData {
   wasteWaterTreated: string
@@ -137,89 +130,68 @@ export default function WasteManagement() {
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (isSubmitting || !isFormValid) return;
 
-    if (isSubmitting) return
-
-    if (!isFormValid) {
-      setErrorMessage('Please complete all waste management fields.')
-      setSubmitStatus('error')
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
-    setErrorMessage('')
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
     try {
-      const userEmail = await getCurrentUserEmail()
-      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
+      const userEmail = await getCurrentUserEmail();
+      if (!userEmail) throw new Error('User email not found.');
 
-      const dataToInsert = wasteRows.flatMap(row => [
-        {
-          name: 'Waste Water Treated',
-          description: `${row.wasteWaterTreated} litres`,
-          category: 'waste_management',
-          value: parseFloat(row.wasteWaterTreated.replace(/,/g, '')) || 0,
-          status: 'active',
-          tags: ['waste_water', 'treatment'],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'Oxygen Demand (BOD / COD)',
-          description: `${row.oxygenDemand} mg / L`,
-          category: 'waste_management',
-          value: parseFloat(row.oxygenDemand) || 0,
-          status: 'active',
-          tags: ['oxygen_demand', 'BOD', 'COD'],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'ETP',
-          description: row.etp,
-          category: 'waste_management',
-          value: 0,
-          status: 'active',
-          tags: ['ETP', row.etp.toLowerCase()],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        },
-        {
-          name: 'Water Treatment Type',
-          description: row.waterTreatmentType,
-          category: 'waste_management',
-          value: 0,
-          status: 'active',
-          tags: ['water_treatment', row.waterTreatmentType.toLowerCase().replace(/\s+/g, '_')],
-          priority: 'medium',
-          user_email: userEmail,
-          username: userProfile?.username || null,
-          organization_name: userProfile?.organization_name || null
-        }
-      ])
+      const userProfile = getUserProfile();
 
-      const { error } = await supabase.from('data_rows').insert(dataToInsert)
-      if (error) throw error
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { // Check for both error and null user
+        throw new Error('User not found or not logged in. Please ensure you are logged in.');
+      }
 
-      await clearAutoSavedData('waste', entryId)
-      setSubmitStatus('success')
+      // Map each form entry to a SINGLE row in the database
+      const dataToInsert = wasteRows.map(row => {
+        const wasteWaterTreated = parseFloat(row.wasteWaterTreated.replace(/,/g, '')) || 0;
+        const oxygenDemand = parseFloat(row.oxygenDemand) || 0;
+
+        // Call the new calculation function
+        const wasteEmission = calculateWasteWaterEmission(
+          oxygenDemand,
+          wasteWaterTreated,
+          row.waterTreatmentType,
+          row.etp
+        );
+
+        return {
+          name: row.waterTreatmentType,
+          description: `ETP: ${row.etp}, Water Treated: ${row.wasteWaterTreated} L, Oxygen Demand: ${row.oxygenDemand} mg/L`,
+          category: 'waste',
+          value: wasteWaterTreated,
+          user_id: user.id,
+          user_email: user.email,
+          organization_name: userProfile?.organization_name || null,
+          // New columns for specific data
+          waste_water_treated: wasteWaterTreated,
+          oxygen_demand: oxygenDemand,
+          etp_type: row.etp,
+          water_treatment_type: row.waterTreatmentType,
+          waste_emission: wasteEmission, // The calculated emission value
+        };
+      });
+
+      const { error } = await supabase.from('data_rows').insert(dataToInsert);
+      if (error) throw error;
+
+      await clearAutoSavedData('waste', entryId);
+      setSubmitStatus('success');
 
     } catch (error) {
-      console.error('Error submitting waste management data:', error)
-      setSubmitStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Error submitting waste management data:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
+      setSubmitStatus('error');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (isLoadingAutoSave) {
     return (

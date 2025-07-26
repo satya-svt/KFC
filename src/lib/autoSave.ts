@@ -30,8 +30,8 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
 
       const autoSaveData: AutoSaveData = {
         user_email: userEmail,
-        username: userProfile.username,
-        organization_name: userProfile.organization_name,
+        username: userProfile?.username,
+        organization_name: userProfile?.organization_name,
         page,
         entry_id: entryId,
         form_data: formData
@@ -59,8 +59,8 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
           .update({
             description: JSON.stringify(autoSaveData),
             updated_at: new Date().toISOString(),
-            username: userProfile.username,
-            organization_name: userProfile.organization_name
+            username: userProfile?.username,
+            organization_name: userProfile?.organization_name
           })
           .eq('id', existing.id)
 
@@ -80,8 +80,8 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
             tags: ['autosave', page, entryId],
             priority: 'low',
             user_email: userEmail,
-            username: userProfile.username,
-            organization_name: userProfile.organization_name
+            username: userProfile?.username,
+            organization_name: userProfile?.organization_name
           })
 
         if (insertError) {
@@ -222,8 +222,8 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
 
     const autoSaveData: AutoSaveData = {
       user_email: userEmail,
-      username: userProfile.username,
-      organization_name: userProfile.organization_name,
+      username: userProfile?.username,
+      organization_name: userProfile?.organization_name,
       page,
       entry_id: entryId,
       form_data: formData
@@ -251,8 +251,8 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
         .update({
           description: JSON.stringify(autoSaveData),
           updated_at: new Date().toISOString(),
-          username: userProfile.username,
-          organization_name: userProfile.organization_name
+          username: userProfile?.username,
+          organization_name: userProfile?.organization_name
         })
         .eq('id', existing.id)
 
@@ -272,8 +272,8 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
           tags: ['autosave', page, entryId],
           priority: 'low',
           user_email: userEmail,
-          username: userProfile.username,
-          organization_name: userProfile.organization_name
+          username: userProfile?.username,
+          organization_name: userProfile?.organization_name
         })
 
       if (insertError) {

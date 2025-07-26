@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase, ResponseData } from '../lib/supabase'
@@ -7,11 +7,13 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import {
-  TrendingUp, Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Home, Lock
+  Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
+
+type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste';
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -22,30 +24,112 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const uniqueOrgs = Array.from(new Set(responses.map(r => r.organization_name).filter(Boolean)));
-
-  const filteredResponses = selectedOrg === 'all'
-    ? responses
-    : responses.filter(r => r.organization_name === selectedOrg);
-
-  const calculateFeedStats = () => {
-    if (filteredResponses.length === 0) return {
-      totalEmissions: 0,
-      averageEmissions: 0
+  const modeConfig: Record<DashboardMode, {
+    icon: React.ElementType;
+    emissionKey: keyof ResponseData;
+    categoryNames: string[];
+    theme: {
+      icon: string;
+      statCard: string;
+      statText: string;
+      statSubText: string;
+      badge: string;
     }
-    const totalEmissions = filteredResponses.reduce((sum, response) => {
-      const emission = parseFloat(response.feed_emission?.toString() || '0') || 0
-      return sum + emission
-    }, 0)
-    const averageEmissions = totalEmissions > 0 ? totalEmissions / filteredResponses.length : 0;
+  }> = {
+    'Feed': {
+      icon: Flame,
+      emissionKey: 'feed_emission',
+      categoryNames: ['feed'],
+      theme: {
+        icon: 'text-orange-400',
+        statCard: 'bg-gradient-to-r from-orange-600/20 to-orange-800/20 border border-orange-500/20',
+        statText: 'text-orange-300',
+        statSubText: 'text-orange-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-orange-900/20 text-orange-400 border border-orange-500/20'
+      }
+    },
+    'Manure': {
+      icon: Droplets,
+      emissionKey: 'manure_emission',
+      categoryNames: ['manure'],
+      theme: {
+        icon: 'text-green-400',
+        statCard: 'bg-gradient-to-r from-green-600/20 to-green-800/20 border border-green-500/20',
+        statText: 'text-green-300',
+        statSubText: 'text-green-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-green-900/20 text-green-400 border border-green-500/20'
+      }
+    },
+    'Energy': {
+      icon: Zap,
+      emissionKey: 'energy_emission',
+      categoryNames: ['energy_processing'],
+      theme: {
+        icon: 'text-yellow-400',
+        statCard: 'bg-gradient-to-r from-yellow-600/20 to-yellow-800/20 border border-yellow-500/20',
+        statText: 'text-yellow-300',
+        statSubText: 'text-yellow-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-yellow-900/20 text-yellow-400 border border-yellow-500/20'
+      }
+    },
+    'Waste': {
+      icon: Droplets,
+      emissionKey: 'waste_emission',
+      categoryNames: ['waste'],
+      theme: {
+        icon: 'text-cyan-400',
+        statCard: 'bg-gradient-to-r from-cyan-600/20 to-cyan-800/20 border border-cyan-500/20',
+        statText: 'text-cyan-300',
+        statSubText: 'text-cyan-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-cyan-900/20 text-cyan-400 border border-cyan-500/20'
+      }
+    }
+  };
+  const CurrentIcon = modeConfig[dashboardMode].icon;
+  const currentTheme = modeConfig[dashboardMode].theme;
+
+
+  const uniqueOrgs = useMemo(() => {
+    // strings remain.
+    const orgNames = responses
+      .map(r => r.organization_name)
+      .filter((name): name is string => !!name);
+
+    return Array.from(new Set(orgNames));
+  }, [responses]);
+
+  const orgFilteredResponses = useMemo(() => {
+    return selectedOrg === 'all'
+      ? responses
+      : responses.filter(r => r.organization_name === selectedOrg);
+  }, [responses, selectedOrg]);
+
+  const modeFilteredResponses = useMemo(() => {
+    const currentCategories = modeConfig[dashboardMode].categoryNames;
+    return orgFilteredResponses.filter(r => currentCategories.includes(r.category || ''));
+  }, [orgFilteredResponses, dashboardMode, modeConfig]);
+
+  const calculateStats = () => {
+    if (modeFilteredResponses.length === 0) {
+      return { totalEmissions: 0, averageEmissions: 0 };
+    }
+    const emissionKey = modeConfig[dashboardMode].emissionKey;
+    const totalEmissions = modeFilteredResponses.reduce((sum, response) => {
+      const emissionValue = response[emissionKey] as (string | number | null | undefined);
+      const emission = parseFloat(String(emissionValue) || '0');
+      return sum + (isNaN(emission) ? 0 : emission);
+    }, 0);
+
+    const averageEmissions = totalEmissions > 0 ? totalEmissions / modeFilteredResponses.length : 0;
     return {
       totalEmissions: Math.round(totalEmissions * 100) / 100,
       averageEmissions: Math.round(averageEmissions * 100) / 100
-    }
-  }
-
-  const feedStats = calculateFeedStats()
+    };
+  };
+  const currentStats = calculateStats();
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,18 +142,70 @@ export default function AdminDashboard() {
   }
 
   const fetchResponses = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: dataRows, error: dataRowsError } = await supabase
         .from('data_rows')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      setResponses(data || [])
+      if (dataRowsError) throw dataRowsError;
+
+      if (!dataRows || dataRows.length === 0) {
+        setResponses([]);
+        return;
+      }
+
+      // CHANGE START: Fetch organization names from profiles table
+      const userIds = Array.from(new Set(dataRows.map(row => row.user_id).filter(Boolean))) as string[];
+
+      let profilesMap: Map<string, string> = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, organization_name')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          // Continue with dataRows even if profiles fetching fails
+        } else if (profiles) {
+          profiles.forEach(profile => {
+            if (profile.id && profile.organization_name) {
+              profilesMap.set(profile.id, profile.organization_name);
+            }
+          });
+        }
+      }
+
+      // Enriche dataRows with organization_name from profiles by PRIORITIZING profiles map
+      const enrichedResponses = dataRows.map(row => {
+        const profileOrgName = profilesMap.get(row.user_id || ''); // Get from map, will be undefined if not found
+        // CHANGE START: Prioritize organization_name from profilesMap
+        const finalOrgName = profileOrgName || row.organization_name || null;
+        // CHANGE END
+
+        // Optional: Add console logs for debugging if needed, then remove them
+        // console.log(`--- Row ID: ${row.id} ---`);
+        // console.log(`  data_rows.user_id: ${row.user_id}`);
+        // console.log(`  profilesMap.get(user_id): ${profileOrgName}`);
+        // console.log(`  data_rows.organization_name: ${row.organization_name}`);
+        // console.log(`  Final organization_name for display: ${finalOrgName}`);
+        // console.log('-------------------------');
+
+        return {
+          ...row,
+          organization_name: finalOrgName
+        } as ResponseData; // Assert to ResponseData to ensure proper typing
+      });
+
+      setResponses(enrichedResponses);
+      // CHANGE END
+
     } catch (error) {
-      console.error('Error fetching responses:', error)
+      console.error('Error fetching responses:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -80,33 +216,54 @@ export default function AdminDashboard() {
   }, [isAuthenticated])
 
   const exportData = () => {
-    const dataToExport = filteredResponses.map(r => ({
+    const dataToExport = orgFilteredResponses.map(r => ({
       Name: r.name,
       Description: r.description || '',
       Category: r.category,
       'Feed Emission': r.feed_emission || 0,
-      Username: r.username || '',
-      Organization: r.organization_name || '',
-      Date: new Date(r.created_at || '').toLocaleDateString()
+      'Manure Emission': r.manure_emission || 0,
+      'Energy Emission': r.energy_emission || 0,
+      'Waste Emission': r.waste_emission || 0,
+      Username: r.user_email || '',
+      Organization: r.organization_name || '', // This will now reflect the enriched name
+      Date: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Export");
-    XLSX.writeFile(workbook, "data_export.xlsx");
+    XLSX.writeFile(workbook, `${dashboardMode}_data_export.xlsx`);
   }
 
-  const totalResponses = filteredResponses.length
-  const responsesByCategory = filteredResponses.reduce((acc, response) => {
-    const key = response.name || 'Unknown'
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const summaryStats = useMemo(() => {
+    const totalRecords = modeFilteredResponses.length;
+    const responsesByCategory = modeFilteredResponses.reduce((acc, response) => {
+      const key = response.name || 'Unknown';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const chartData = Object.entries(responsesByCategory).map(([name, value]) => ({
-    name,
-    value,
-    percentage: totalResponses > 0 ? Math.round((value / totalResponses) * 100) : 0
-  }))
+
+    const mostCommonType = Object.entries(responsesByCategory).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+    return { totalRecords, mostCommonType, responsesByCategory };
+  }, [modeFilteredResponses]);
+
+  const chartData = useMemo(() => {
+    return Object.entries(summaryStats.responsesByCategory).map(([name, value]) => ({
+      name,
+      value,
+      percentage: summaryStats.totalRecords > 0 ? Math.round((value / summaryStats.totalRecords) * 100) : 0
+    }));
+  }, [summaryStats]);
+
+  const orgCounts = useMemo(() => {
+    return responses.reduce((acc, response) => {
+      if (response.organization_name) {
+        acc[response.organization_name] = (acc[response.organization_name] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+  }, [responses]);
 
   if (!isAuthenticated) {
     return (
@@ -118,6 +275,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
+          {/* FIX: ADDED THIS DIV AND BUTTON BACK */}
           <motion.div
             className="flex items-center justify-between mb-6"
             initial={{ opacity: 0, y: -20 }}
@@ -136,6 +294,7 @@ export default function AdminDashboard() {
               <span className="hidden sm:inline">Back</span>
             </motion.button>
           </motion.div>
+          {/* END OF FIX */}
           <motion.div
             className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-500/30"
             initial={{ scale: 0 }}
@@ -144,50 +303,20 @@ export default function AdminDashboard() {
           >
             <Lock className="w-8 h-8 text-gray-300" />
           </motion.div>
-          <motion.h1
-            className="text-white text-2xl font-bold mb-4 text-center"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Admin Access
-          </motion.h1>
-          <motion.p
-            className="text-gray-300 text-center mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            Enter the admin password to access the dashboard
-          </motion.p>
-          <motion.input
+          <h1 className="text-white text-2xl font-bold mb-4 text-center">Admin Access</h1>
+          <p className="text-gray-300 text-center mb-6">Enter the admin password to access the dashboard</p>
+          <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="Enter password"
             className="w-full px-4 py-3 mb-4 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300"
             required
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
           />
-          {authError && (
-            <motion.p
-              className="text-red-400 text-sm mb-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {authError}
-            </motion.p>
-          )}
+          {authError && <p className="text-red-400 text-sm mb-2">{authError}</p>}
           <motion.button
             type="submit"
             className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
           >
             Access Dashboard
           </motion.button>
@@ -200,9 +329,9 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <motion.div
+          className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
         >
           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-xl">Loading dashboard...</p>
@@ -217,207 +346,131 @@ export default function AdminDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <motion.div
-        className="flex justify-between items-center mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <motion.div className="flex justify-between items-center mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} >
         <div className="flex items-center space-x-4">
-          <motion.button
-            onClick={() => navigate('/auth')}
-            className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-300 flex items-center space-x-2"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Back to Home"
-          >
+          <motion.button onClick={() => navigate('/')} className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all" title="Back to Home" >
             <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Back</span>
           </motion.button>
           <span className="text-white">Admin</span>
         </div>
         <div className="flex gap-4">
-          <motion.button
-            onClick={exportData}
-            className="bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Download className="w-4 h-4" />
-            Export Excel
+          <motion.button onClick={exportData} className="bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-all" >
+            <Download className="w-4 h-4" /> Export Excel
           </motion.button>
-          <motion.button
-            onClick={() => setIsAuthenticated(false)}
-            className="bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
+          <motion.button onClick={() => setIsAuthenticated(false)} className="bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-all" >
+            <LogOut className="w-4 h-4" /> Logout
           </motion.button>
         </div>
       </motion.div>
 
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Total Records</p>
-          <p className="text-3xl font-bold">{totalResponses}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            {selectedOrg === 'all' ? 'All organizations' : `Organization: ${selectedOrg}`}
-          </p>
-        </motion.div>
-        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Unique Feed Types</p>
-          <p className="text-3xl font-bold">{Object.keys(responsesByCategory).length}</p>
-        </motion.div>
-        <motion.div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Most Common Feed</p>
-          <p className="text-3xl font-bold">
-            {Object.entries(responsesByCategory).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'}
-          </p>
-        </motion.div>
+      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" >
+        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+          <p className="text-sm text-gray-300">Total {dashboardMode} Records</p>
+          <p className="text-3xl font-bold">{summaryStats.totalRecords}</p>
+        </div>
+
+        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+          <p className="text-sm text-gray-300">Most Common {dashboardMode} Type</p>
+          <p className="text-3xl font-bold">{summaryStats.mostCommonType}</p>
+        </div>
       </motion.div>
 
-      <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-      >
+      <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <h3 className="text-lg font-semibold mb-4">Filter by Organization</h3>
           <div className="flex flex-wrap gap-2">
-            <motion.button
-              onClick={() => setSelectedOrg('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedOrg === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                }`}
-            >
-              All Organizations ({responses.length})
-            </motion.button>
+            <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
             {uniqueOrgs.map(org => (
-              <motion.button
+              <button
                 key={org}
                 onClick={() => setSelectedOrg(org)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedOrg === org
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                  }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === org ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
               >
-                {org} ({responses.filter(r => r.organization_name === org).length})
-              </motion.button>
+                {org} ({orgCounts[org] || 0})
+              </button>
             ))}
           </div>
         </div>
       </motion.div>
 
-      <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Calculator className="w-6 h-6 text-blue-400" />
-          <h2 className="text-2xl font-bold">Statistics</h2>
+      <motion.div className="mb-8" >
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Calculator className="w-6 h-6 text-blue-400" />
+            <h2 className="text-2xl font-bold">Statistics</h2>
+          </div>
+          <div className="relative">
+            <motion.button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 border border-white/20" >
+              <CurrentIcon className={`w-5 h-5 ${currentTheme.icon}`} />
+              <span className="font-medium">{dashboardMode}</span>
+              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </motion.button>
+            {isDropdownOpen && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/20 rounded-lg shadow-lg z-10" >
+                {/* FIX: Generate dropdown items from the modeConfig object keys */}
+                {(Object.keys(modeConfig) as DashboardMode[]).map(mode => {
+                  const modeData = modeConfig[mode];
+                  return (
+                    <button key={mode} onClick={() => { setDashboardMode(mode); setIsDropdownOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center gap-3" >
+                      <modeData.icon className={`w-5 h-5 ${modeData.theme.icon}`} />
+                      {mode}
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div
-            className="bg-gradient-to-r from-orange-600/20 to-orange-800/20 p-6 rounded-lg border border-orange-500/20 backdrop-blur-lg"
-          >
+          <motion.div className={`p-6 rounded-lg backdrop-blur-lg ${currentTheme.statCard}`} >
             <div className="flex items-center gap-3 mb-2">
-              <BarChart3 className="w-5 h-5 text-orange-400" />
-              <p className="text-sm text-orange-300 font-medium">Total Emissions</p>
+              <BarChart3 className={`w-5 h-5 ${currentTheme.icon}`} />
+              <p className={`text-sm font-medium ${currentTheme.statText}`}>Total Emissions</p>
             </div>
-            <p className="text-3xl font-bold text-white">{feedStats.totalEmissions.toLocaleString()}</p>
-            <p className="text-sm text-orange-200 mt-1">Total emissions across all feeds</p>
+            <p className="text-3xl font-bold text-white">{currentStats.totalEmissions.toLocaleString()}</p>
+            <p className={`text-sm mt-1 ${currentTheme.statSubText}`}>Total emissions from {dashboardMode} category</p>
           </motion.div>
-
         </div>
       </motion.div>
 
-      {/* --- THIS IS THE FIX: The Charts section has been added back --- */}
-      <motion.div
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <motion.div
-          className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
-        >
+      <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
+        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg" >
           <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
               <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={60} />
               <YAxis stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
-                labelStyle={{ color: '#D1D5DB' }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} labelStyle={{ color: '#D1D5DB' }} />
               <Bar dataKey="value" fill="#6B7280" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </motion.div>
-        <motion.div
-          className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
-        >
+        </div>
+        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg" >
           <h3 className="text-xl font-semibold mb-4">Data Share (Pie)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
-              >
-                {chartData.map((_, i) => (
-                  <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                ))}
+              <Pie data={chartData} cx="50%" cy="50%" labelLine={false} outerRadius={100} fill="#8884d8" dataKey="value" label={({ name, percentage }) => `${name}: ${percentage}%`} >
+                {chartData.map((_, i) => (<Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />))}
               </Pie>
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} />
             </PieChart>
           </ResponsiveContainer>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Raw Data */}
-      <motion.div
-        className="mt-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
+      <motion.div className="mt-10" >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Raw Data</h2>
-          <motion.button
-            onClick={() => setShowRawData(!showRawData)}
-            className="bg-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition-all duration-300"
-          >
+          <h2 className="text-2xl font-semibold">Raw {dashboardMode} Data</h2>
+          <button onClick={() => setShowRawData(!showRawData)} className="bg-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition-all" >
             {showRawData ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {showRawData ? 'Hide' : 'Show'}
-          </motion.button>
+          </button>
         </div>
 
         {showRawData && (
-          <motion.div
-            className="overflow-x-auto border border-white/10 rounded-lg backdrop-blur-lg"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
+          <motion.div className="overflow-x-auto border border-white/10 rounded-lg backdrop-blur-lg" >
             <table className="min-w-full text-left text-sm text-gray-300">
               <thead className="bg-white/5 text-gray-400 uppercase">
                 <tr>
@@ -430,48 +483,37 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredResponses
-                  .filter(r => r.category === 'feed')
-                  .map((r, i) => {
-                    const value = r.value ?? 'N/A';
-                    let unit = '';
-                    if (r.tags && Array.isArray(r.tags)) {
-                      unit = r.tags.find((tag: string) => ['gms', 'kg', 'Quintal', 'Tons'].includes(tag)) || '';
-                    }
-                    if (!unit && r.description) {
-                      const descMatch = r.description.match(/([\d.]+)\s*([^\s]+)/);
-                      if (descMatch) { unit = descMatch[2] || ''; }
-                    }
-                    return (
-                      <tr key={r.id || i} className="border-b border-white/10">
-                        <td className="px-6 py-4 text-white font-medium">{r.name || 'N/A'}</td>
-                        <td className="px-6 py-4 text-gray-300">{String(value)}</td>
-                        <td className="px-6 py-4 text-gray-300">{unit || 'N/A'}</td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 rounded-full text-xs bg-orange-900/20 text-orange-400 border border-orange-500/20">
-                            {r.feed_emission !== undefined ? parseFloat(r.feed_emission).toFixed(4) : '0.0000'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {r.organization_name ? (
-                            <span className="px-2 py-1 rounded-full text-xs bg-blue-900/20 text-blue-400 border border-blue-500/20">
-                              {r.organization_name}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-gray-300">
-                          {r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A'}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                {modeFilteredResponses.map((r) => {
+                  const emissionKey = modeConfig[dashboardMode].emissionKey;
+                  const emissionValue = r[emissionKey] as (string | number | null | undefined);
+
+                  const value = r.value ?? 'N/A';
+                  let unit = '';
+                  if (r.description) {
+                    const match = r.description.match(/^[\d\.]+\s*(.*)$/);
+                    unit = match && match[1] ? match[1] : '';
+                  }
+
+                  return (
+                    <tr key={r.id} className="border-b border-white/10">
+                      <td className="px-6 py-4 text-white font-medium">{r.name || 'N/A'}</td>
+                      <td className="px-6 py-4 text-gray-300">{String(value)}</td>
+                      <td className="px-6 py-4 text-gray-300">{unit || 'N/A'}</td>
+                      <td className="px-6 py-4">
+                        <span className={currentTheme.badge}>
+                          {emissionValue !== undefined && emissionValue !== null ? parseFloat(String(emissionValue)).toFixed(4) : '0.0000'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">{r.organization_name ? (<span className="px-2 py-1 rounded-full text-xs bg-blue-900/20 text-blue-400 border border-blue-500/20"> {r.organization_name} </span>) : (<span className="text-gray-500">-</span>)}</td>
+                      <td className="px-6 py-4 text-gray-300">{r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            {filteredResponses.filter(r => r.category === 'feed').length === 0 && (
+            {modeFilteredResponses.length === 0 && (
               <div className="text-center py-8 text-gray-400">
-                <p>No feed data available for the selected filter.</p>
+                <p>No {dashboardMode.toLowerCase()} data available for the selected filter.</p>
               </div>
             )}
           </motion.div>

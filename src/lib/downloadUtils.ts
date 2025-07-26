@@ -80,11 +80,11 @@ export const downloadAsPDF = async (entryId: string = 'entry_1') => {
     const formatted = formatDataForExport(data)
 
     const doc = new jsPDF()
-    
+
     // Add title
     doc.setFontSize(20)
     doc.text('Submission Report', 20, 20)
-    
+
     // Add user info
     doc.setFontSize(12)
     doc.text(`User: ${userEmail || 'N/A'}`, 20, 35)
@@ -110,7 +110,7 @@ export const downloadAsPDF = async (entryId: string = 'entry_1') => {
           doc.addPage()
           yPosition = 20
         }
-        
+
         // Add section title
         doc.setFontSize(14)
         doc.text(section.title, 20, yPosition)
@@ -167,17 +167,17 @@ export const downloadAsCSV = async (entryId: string = 'entry_1') => {
     sections.forEach(section => {
       if (section.data && section.data.length > 0) {
         csvContent += `${section.title}\n`
-        
+
         // Add headers
         const headers = Object.keys(section.data[0])
         csvContent += headers.join(',') + '\n'
-        
+
         // Add data rows
         section.data.forEach(item => {
           const row = headers.map(header => `"${item[header] || ''}"`)
           csvContent += row.join(',') + '\n'
         })
-        
+
         csvContent += '\n'
       }
     })

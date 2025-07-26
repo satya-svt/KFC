@@ -13,11 +13,13 @@ import {
   Settings,
   Menu,
   X,
-  FileText
+  FileText,
+  ClipboardList
 } from 'lucide-react';
 import silvergrey from '../assets/silvergrey.jpg';
 
 const navigationItems = [
+  { path: '/general', label: 'GENERAL', icon: ClipboardList, color: 'text-pink-400', hoverColor: 'hover:text-pink-300' },
   { path: '/form', label: 'FEED', icon: Wheat, color: 'text-green-400', hoverColor: 'hover:text-green-300' },
   { path: '/manure', label: 'Manure', icon: Recycle, color: 'text-yellow-400', hoverColor: 'hover:text-yellow-300' },
   { path: '/energy', label: 'Energy', icon: Zap, color: 'text-blue-400', hoverColor: 'hover:text-blue-300' },
@@ -99,8 +101,8 @@ export default function Navbar() {
                   key={item.path}
                   onClick={() => navigate(item.path)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${isActive
-                      ? 'bg-white/20 text-white shadow-lg'
-                      : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
+                    ? 'bg-white/20 text-white shadow-lg'
+                    : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
                     }`}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
@@ -185,8 +187,8 @@ export default function Navbar() {
                       setIsMobileMenuOpen(false);
                     }}
                     className={`flex items-center space-x-3 w-full px-3 py-3 rounded-lg transition-all duration-300 ${isActive
-                        ? 'bg-white/20 text-white'
-                        : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
+                      ? 'bg-white/20 text-white'
+                      : `text-gray-300 hover:bg-white/10 ${item.hoverColor}`
                       }`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}

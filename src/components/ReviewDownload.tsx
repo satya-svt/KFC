@@ -18,6 +18,7 @@ import {
   Truck,
   User,
   Building2,
+  ClipboardList,
   Calendar
 } from 'lucide-react'
 import containerImage from '../assets/737373.jpg'
@@ -221,6 +222,7 @@ export default function ReviewDownload() {
   const formatDataForDisplay = (data: any[], type: string) => {
     if (!data || !Array.isArray(data)) return []
     switch (type) {
+      case 'general': return data.map((item, index) => ({ 'S.no': index + 1, 'Poultry Supplied': `${item.poultry_quantity} ${item.poultry_unit}`, 'KFC Share (%)': item.kfc_share, 'Bird Count': item.bird_count }));
       case 'feed': return data.map((item, index) => ({ 'S.no': index + 1, feedType: item.feed_type || 'N/A', quantity: item.quantity || 'N/A', unit: item.unit || 'N/A' }));
       case 'manure': return data.map((item, index) => ({ 'S.no': index + 1, systemType: item.systemType || 'N/A', daysUsed: item.daysUsed || 'N/A' }));
       case 'energy': return data.sort((a, b) => (a.energyType || '').localeCompare(b.energyType || '')).map((item, index) => ({ 'S.no': index + 1, facility: item.facility || 'N/A', energyType: item.energyType || 'N/A', unit: item.unit || 'N/A', consumption: item.consumption || 'N/A' }));
@@ -231,6 +233,7 @@ export default function ReviewDownload() {
   }
 
   const sections = [
+    { key: 'general', title: 'GENERAL', icon: ClipboardList, color: 'text-pink-600', data: formatDataForDisplay(allData.general, 'general'), headers: ['S.no', 'Poultry Supplied', 'KFC Share (%)', 'Bird Count'] },
     { key: 'feed', title: 'FEED Data', icon: Wheat, color: 'text-green-600', data: formatDataForDisplay(allData.feed, 'feed'), headers: ['S.no', 'Feed Type', 'Quantity', 'Unit'] },
     { key: 'manure', title: 'Manure Management', icon: Recycle, color: 'text-yellow-600', data: formatDataForDisplay(allData.manure, 'manure'), headers: ['S.no', 'System Type', 'Days Used'] },
     { key: 'energy', title: 'Energy & Processing', icon: Zap, color: 'text-blue-600', data: formatDataForDisplay(allData.energy, 'energy'), headers: ['S.no', 'Facility', 'Energy Type', 'Unit', 'Consumption'] },
@@ -324,7 +327,7 @@ export default function ReviewDownload() {
                 <h3 className="text-gray-800 font-medium">Submission Complete</h3>
               </div>
               <p className="text-gray-800 text-sm">
-                ({completedSections.length} of 5 sections completed)
+                ({completedSections.length} of 6 sections completed)
               </p>
             </motion.div>
 

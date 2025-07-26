@@ -1,4 +1,6 @@
-// --- EXISTING FEED FACTORS ---
+// emissionFactors.ts
+
+// --- 1. EXISTING FEED FACTORS ---
 export const EMISSION_FACTORS: Record<string, number> = {
   'Soyameal': 1.8,
   'Corn(Maize)': 0.271287,
@@ -34,7 +36,7 @@ export const EMISSION_FACTORS: Record<string, number> = {
   'palm kernel cake': 0.1
 };
 
-// --- NEW MANURE FACTORS ---
+// --- 2. EXISTING MANURE FACTORS ---
 export const MANURE_EMISSION_FACTORS: Record<string, number> = {
   'Aerobic treatment - forced aeration': 0.00116,
   'Aerobic treatment - natural aeration': 0.00232,
@@ -73,6 +75,41 @@ export const MANURE_EMISSION_FACTORS: Record<string, number> = {
   'Uncovered anaerobic lagoon': 0.05207,
 };
 
+// --- 3. NEW ENERGY FACTORS ---
+export const ENERGY_EMISSION_FACTORS: Record<string, number> = {
+  'Electricity (grid)': 0.716,
+  'Petrol (average biofuel blend)': 2.81,
+  'Diesel (average biofuel blend)': 3.12,
+  'LPG': 0.35,
+  'Biodiesel HVO': 0.25,
+  'Biodiesel ME': 0.59,
+  'Bioethanol': 0.55,
+  'CHP export - (biogas)': 0.00,
+  'CHP export - electricity (natural gas)': -0.14,
+  'CHP export - heat (natural gas)': -0.07,
+  'CHP import - electricity (natural gas)': 0.14,
+  'CHP import - heat (natural gas)': 0.07,
+  'CHP import (biogas)': 0.00,
+  'CHP onsite (biogas)': 0.00,
+  'CHP onsite (natural gas)': 0.18,
+  'Coal (by energy)': 0.38,
+  'Coal (by weight)': 2.80,
+  'Diesel (100% mineral diesel)': 3.33,
+  'Electricity (hydroelectric)': 0.01,
+  'Electricity (photo-voltaic)': 0.07,
+  'Electricity (wind)': 0.01,
+  'Fuel wood': 0.14,
+  'Gas (by energy)': 0.21,
+  'Gas (by volume)': 0.000,
+  'Gas (by weight)': 2.97,
+  'Oil (by energy)': 0.32,
+  'Oil (by volume)': 3.39,
+  'Petrol (100% mineral petrol)': 2.94,
+  'Propane': 1.72,
+  'Wood pellets': 0.25
+};
+
+
 // --- EXISTING FEED HELPER FUNCTIONS ---
 export const getEmissionFactor = (feedType: string): number => {
   return EMISSION_FACTORS[feedType] || 0;
@@ -81,4 +118,108 @@ export const getEmissionFactor = (feedType: string): number => {
 export const calculateFeedEmission = (quantity: number, feedType: string): number => {
   const emissionFactor = getEmissionFactor(feedType);
   return quantity * emissionFactor;
+};
+
+// --- EXISTING MANURE HELPER FUNCTIONS ---
+export const getManureEmissionFactor = (manureType: string): number => {
+  return MANURE_EMISSION_FACTORS[manureType] || 0;
+};
+
+export const calculateManureEmission = (quantity: number, manureType: string): number => {
+  const emissionFactor = getManureEmissionFactor(manureType);
+  return quantity * emissionFactor;
+};
+
+// --- NEW ENERGY HELPER FUNCTIONS ---
+
+/**
+ * Helper function to get emission factor for an energy type.
+ * @param energyType The type of energy.
+ * @returns The emission factor, or 0 if not found.
+ */
+export const getEnergyEmissionFactor = (energyType: string): number => {
+  return ENERGY_EMISSION_FACTORS[energyType] || 0;
+};
+
+/**
+ * Helper function to calculate energy emission.
+ * Implements a special formula for 'Electricity (grid)' to account for transmission loss.
+ * Uses a standard formula for all other energy types.
+ * @param quantity The amount of consumption.
+ * @param energyType The type of energy consumed.
+ * @returns The calculated emission value.
+ */
+export const calculateEnergyEmission = (quantity: number, energyType: string): number => {
+  const emissionFactor = getEnergyEmissionFactor(energyType);
+  const transmissionLossPercentage = 0.176; // 17.6%
+
+  if (energyType === 'Electricity (grid)') {
+    // Step 1: Calculate total consumption including transmission loss (ANS1)
+    const totalConsumption = quantity / (1 - transmissionLossPercentage);
+
+    // Step 2: Calculate the amount of energy lost during transmission (ANS2)
+    const transmissionLoss = totalConsumption - quantity;
+
+    // Step 3: Calculate the final emission value based on the transmission loss
+    return transmissionLoss * emissionFactor;
+  } else {
+    // Standard calculation for all other energy types
+    return quantity * emissionFactor;
+  }
+};
+
+interface WasteWaterFactors {
+  biochemical: number;
+  chemical: number;
+}
+
+// This object holds the new factor data
+export const WASTE_WATER_EMISSION_FACTORS: Record<string, WasteWaterFactors> = {
+  'None - unspecified aquatic environment': { biochemical: 1.8414, chemical: 0.76725 },
+  'None - stagnant sewer': { biochemical: 8.37, chemical: 3.4875 },
+  'None - fast flowing sewer': { biochemical: 0, chemical: 0 },
+  'Centralized aerobic treatment plant': { biochemical: 0.5022, chemical: 0.20925 },
+  'Sludge anaerobic digestion - DEPRECATED': { biochemical: 13.392, chemical: 5.58 },
+  'Anaerobic reactor': { biochemical: 13.392, chemical: 5.58 },
+  'Anaerobic lagoon - depth < 2m': { biochemical: 3.348, chemical: 1.395 },
+  'Anaerobic lagoon - depth > 2m': { biochemical: 13.392, chemical: 5.58 },
+  'None - other than reservoirs, lakes, and estuaries': { biochemical: 0.5859, chemical: 0.24413 },
+  'None - reservoirs, lakes, and estuaries': { biochemical: 3.1806, chemical: 1.32525 },
+  'Constructed Wetlands - Surface Flow': { biochemical: 6.696, chemical: 2.79 },
+  'Constructed Wetlands - Horizontal Subsurface Flow': { biochemical: 1.674, chemical: 0.6975 },
+  'Constructed Wetlands - Vertical Subsurface Flow': { biochemical: 0.1674, chemical: 0.06975 }
+};
+
+// --- NEW WASTE WATER CALCULATION FUNCTION ---
+
+/**
+ * Calculates waste water emissions based on multiple factors.
+ * @param oxygenDemand - The BOD/COD value in mg/L.
+ * @param wasteWaterTreated - The amount of water treated in Liters.
+ * @param waterTreatmentType - The type of water treatment system used.
+ * @param etpType - The type of ETP, 'Chemical' or 'Biochemical'.
+ * @returns The final emission value in Tons.
+ */
+export const calculateWasteWaterEmission = (
+  oxygenDemand: number,
+  wasteWaterTreated: number,
+  waterTreatmentType: string,
+  etpType: 'Chemical' | 'Biochemical' | string
+): number => {
+  // 1. Find the factor object for the given treatment type
+  const factorObject = WASTE_WATER_EMISSION_FACTORS[waterTreatmentType];
+  if (!factorObject) {
+    return 0; // Return 0 if the treatment type is not found
+  }
+
+  // 2. Select the correct factor based on the ETP type
+  const factor = etpType === 'Biochemical' ? factorObject.biochemical : factorObject.chemical;
+
+  // 3. Calculate the emission in Kgs
+  const emissionInKgs = oxygenDemand * wasteWaterTreated * factor;
+
+  // 4. Convert Kgs to Tons and return the value
+  const emissionInTons = emissionInKgs / 1000;
+
+  return emissionInTons;
 };

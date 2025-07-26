@@ -146,6 +146,10 @@ export default function ManureManagement() {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { // Check for both error and null user
+        throw new Error('User not found or not logged in. Please ensure you are logged in.');
+      }
       const dataToInsert = validSystems.map(system => ({
         name: system.systemType,
         description: `${system.daysUsed} days per year`,
@@ -154,7 +158,8 @@ export default function ManureManagement() {
         status: 'active',
         tags: [system.systemType, 'manure_management'],
         priority: 'medium',
-        user_email: userEmail,
+        user_id: user.id,
+        user_email: user.email,
         organization_name: userProfile?.organization_name || null
       }))
 

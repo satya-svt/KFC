@@ -142,6 +142,10 @@ export default function UserForm() {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { // Check for both error and null user
+        throw new Error('User not found or not logged in. Please ensure you are logged in.');
+      }
       const validRows = feedRows.filter(row =>
         row.feed_type && row.quantity && row.unit
       )
@@ -154,7 +158,8 @@ export default function UserForm() {
           description: `${row.quantity} ${row.unit}`,
           category: 'feed',
           value: quantity,
-          user_email: userEmail,
+          user_id: user.id,
+          user_email: user.email,
           organization_name: userProfile?.organization_name || null,
           feed_emission: feedEmission
         }

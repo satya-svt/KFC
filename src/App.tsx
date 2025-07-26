@@ -15,6 +15,7 @@ import EnergyProcessing from './components/EnergyProcessing';
 import WasteManagement from './components/WasteManagement';
 import Transport from './components/Transport';
 import ReviewDownload from './components/ReviewDownload';
+import GeneralForm from './components/GeneralForm'
 
 // This new layout component will wrap all protected pages to give them the Navbar
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
@@ -34,7 +35,7 @@ function App() {
       {/* --- Route Updated --- */}
       {/* Route 1: The new public home page. It doesn't have the main Navbar. */}
       <Route path="/" element={<HomePage />} />
-
+      <Route path="/general" element={<GeneralForm />} /> {/* General Form route*/}
       {/* Route 2: The public authentication page. */}
       <Route path="/auth" element={<AuthPage />} />
 

@@ -153,6 +153,11 @@ export default function Transport() {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { // Check for both error and null user
+        throw new Error('User not found or not logged in. Please ensure you are logged in.');
+      }
+
       const dataToInsert = transportRows.map(row => {
         const distance = parseFloat(row.distance.replace(/,/g, '')) || 0
 
@@ -164,7 +169,8 @@ export default function Transport() {
           status: 'active',
           tags: [row.route.toLowerCase().replace(/\s+/g, '_'), row.vehicleType.toLowerCase().replace(/\s+/g, '_'), 'transport'],
           priority: 'medium',
-          user_email: userEmail,
+          user_id: user.id,
+          user_email: user.email,
           organization_name: userProfile?.organization_name || null
         }
       })
