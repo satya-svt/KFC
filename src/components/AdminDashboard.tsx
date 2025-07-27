@@ -7,7 +7,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import {
-  Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap
+  Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap, Search // --- CHANGE: Import the Search icon ---
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -26,6 +26,10 @@ export default function AdminDashboard() {
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // --- CHANGE START: Add state for the organization search term ---
+  const [orgSearchTerm, setOrgSearchTerm] = useState('');
+  // --- CHANGE END ---
 
   const modeConfig: Record<DashboardMode, {
     icon: React.ElementType;
@@ -91,15 +95,23 @@ export default function AdminDashboard() {
   const CurrentIcon = modeConfig[dashboardMode].icon;
   const currentTheme = modeConfig[dashboardMode].theme;
 
-
+  // --- CHANGE START: Filter the list of unique organizations based on the search term ---
   const uniqueOrgs = useMemo(() => {
-    // strings remain.
     const orgNames = responses
       .map(r => r.organization_name)
       .filter((name): name is string => !!name);
 
-    return Array.from(new Set(orgNames));
-  }, [responses]);
+    const uniqueNames = Array.from(new Set(orgNames));
+
+    if (!orgSearchTerm) {
+      return uniqueNames;
+    }
+
+    return uniqueNames.filter(org =>
+      org.toLowerCase().includes(orgSearchTerm.toLowerCase())
+    );
+  }, [responses, orgSearchTerm]);
+  // --- CHANGE END ---
 
   const orgFilteredResponses = useMemo(() => {
     return selectedOrg === 'all'
@@ -156,7 +168,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      // CHANGE START: Fetch organization names from profiles table
       const userIds = Array.from(new Set(dataRows.map(row => row.user_id).filter(Boolean))) as string[];
 
       let profilesMap: Map<string, string> = new Map();
@@ -168,7 +179,6 @@ export default function AdminDashboard() {
 
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
-          // Continue with dataRows even if profiles fetching fails
         } else if (profiles) {
           profiles.forEach(profile => {
             if (profile.id && profile.organization_name) {
@@ -178,29 +188,17 @@ export default function AdminDashboard() {
         }
       }
 
-      // Enriche dataRows with organization_name from profiles by PRIORITIZING profiles map
       const enrichedResponses = dataRows.map(row => {
-        const profileOrgName = profilesMap.get(row.user_id || ''); // Get from map, will be undefined if not found
-        // CHANGE START: Prioritize organization_name from profilesMap
+        const profileOrgName = profilesMap.get(row.user_id || '');
         const finalOrgName = profileOrgName || row.organization_name || null;
-        // CHANGE END
-
-        // Optional: Add console logs for debugging if needed, then remove them
-        // console.log(`--- Row ID: ${row.id} ---`);
-        // console.log(`  data_rows.user_id: ${row.user_id}`);
-        // console.log(`  profilesMap.get(user_id): ${profileOrgName}`);
-        // console.log(`  data_rows.organization_name: ${row.organization_name}`);
-        // console.log(`  Final organization_name for display: ${finalOrgName}`);
-        // console.log('-------------------------');
 
         return {
           ...row,
           organization_name: finalOrgName
-        } as ResponseData; // Assert to ResponseData to ensure proper typing
+        } as ResponseData;
       });
 
       setResponses(enrichedResponses);
-      // CHANGE END
 
     } catch (error) {
       console.error('Error fetching responses:', error);
@@ -225,7 +223,7 @@ export default function AdminDashboard() {
       'Energy Emission': r.energy_emission || 0,
       'Waste Emission': r.waste_emission || 0,
       Username: r.user_email || '',
-      Organization: r.organization_name || '', // This will now reflect the enriched name
+      Organization: r.organization_name || '',
       Date: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -275,7 +273,6 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* FIX: ADDED THIS DIV AND BUTTON BACK */}
           <motion.div
             className="flex items-center justify-between mb-6"
             initial={{ opacity: 0, y: -20 }}
@@ -294,7 +291,6 @@ export default function AdminDashboard() {
               <span className="hidden sm:inline">Back</span>
             </motion.button>
           </motion.div>
-          {/* END OF FIX */}
           <motion.div
             className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-500/30"
             initial={{ scale: 0 }}
@@ -377,7 +373,23 @@ export default function AdminDashboard() {
 
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <h3 className="text-lg font-semibold mb-4">Filter by Organization</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Filter by Organization</h3>
+          </div>
+
+          {/* --- CHANGE START: Add the search input field --- */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search organizations..."
+              value={orgSearchTerm}
+              onChange={(e) => setOrgSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {/* --- CHANGE END --- */}
+
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
             {uniqueOrgs.map(org => (
@@ -407,7 +419,6 @@ export default function AdminDashboard() {
             </motion.button>
             {isDropdownOpen && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/20 rounded-lg shadow-lg z-10" >
-                {/* FIX: Generate dropdown items from the modeConfig object keys */}
                 {(Object.keys(modeConfig) as DashboardMode[]).map(mode => {
                   const modeData = modeConfig[mode];
                   return (
@@ -459,7 +470,6 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* Raw Data */}
       <motion.div className="mt-10" >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Raw {dashboardMode} Data</h2>
