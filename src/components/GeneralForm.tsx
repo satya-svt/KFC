@@ -58,19 +58,26 @@ export default function GeneralForm() {
     }, [])
 
     React.useEffect(() => {
-        const handleBeforeUnload = () => {
+        // This function saves data immediately
+        const saveOnExit = () => {
             const hasData = generalRows.some(row =>
                 row.poultry_quantity || row.poultry_unit || row.kfc_share || row.bird_count
-            )
+            );
             if (hasData) {
-                saveFormDataImmediately('general', generalRows, entryId)
+                saveFormDataImmediately('general', generalRows, entryId);
             }
-        }
-        window.addEventListener('beforeunload', handleBeforeUnload)
+        };
+
+        // Add listener for closing the browser tab
+        window.addEventListener('beforeunload', saveOnExit);
+
+        // This cleanup function runs when you navigate away to another page
         return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload)
-        }
-    }, [generalRows, entryId])
+            window.removeEventListener('beforeunload', saveOnExit);
+            // Save data when leaving the page via internal navigation
+            saveOnExit();
+        };
+    }, [generalRows, entryId]);
 
     React.useEffect(() => {
         if (!isLoadingAutoSave) {

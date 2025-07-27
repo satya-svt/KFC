@@ -75,6 +75,50 @@ export const MANURE_EMISSION_FACTORS: Record<string, number> = {
   'Uncovered anaerobic lagoon': 0.05207,
 };
 
+// src/lib/emissionFactors.ts
+
+// --- UTILITY FUNCTION TO CONVERT POULTRY TO TONS ---
+const convertPoultryToTons = (quantity: number, unit: string): number => {
+  switch (unit?.toLowerCase()) {
+    case 'tons':
+      return quantity;
+    case 'quintal':
+      return quantity * 0.1; // 1 Quintal = 0.1 Tons
+    case 'kg':
+      return quantity * 0.001; // 1 Kg = 0.001 Tons
+    default:
+      return 0;
+  }
+};
+
+// --- NEW MANURE EMISSION CALCULATION FUNCTION ---
+
+/**
+ * Calculates manure emissions based on poultry supply, a factor, and days used.
+ * @param poultryQuantity - The amount of processed poultry.
+ * @param poultryUnit - The unit for the poultry amount ('Kg', 'Quintal', 'Tons').
+ * @param manureFactor - The specific emission factor for the manure system.
+ * @param daysUsed - The number of days the system was used.
+ * @returns The final emission value in Tons.
+ */
+export const calculateManureEmissionWithPoultry = (
+  poultryQuantity: number,
+  poultryUnit: string,
+  manureFactor: number,
+  daysUsed: number
+): number => {
+  // 1. Convert the processed poultry supplied to tons, as requested.
+  const poultryInTons = convertPoultryToTons(poultryQuantity, poultryUnit);
+
+  // 2. Perform the core calculation to get the result in Kgs.
+  const emissionInKgs = poultryInTons * manureFactor * daysUsed;
+
+  // 3. Convert the final result from Kgs to Tons.
+  const emissionInTons = emissionInKgs / 1000;
+
+  return emissionInTons;
+};
+
 // --- 3. NEW ENERGY FACTORS ---
 export const ENERGY_EMISSION_FACTORS: Record<string, number> = {
   'Electricity (grid)': 0.716,

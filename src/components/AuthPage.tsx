@@ -70,7 +70,19 @@ export default function AuthPage() {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/form');
+        // --- CHANGE START: Implement 5-minute session check ---
+        const loginTimestamp = localStorage.getItem('loginTimestamp');
+        const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+        if (loginTimestamp && (Date.now() - parseInt(loginTimestamp, 10)) > fiveMinutes) {
+          // If session is older than 5 minutes, sign out and stay on login page
+          supabase.auth.signOut();
+          localStorage.removeItem('loginTimestamp');
+        } else {
+          // If session is recent, redirect to the general form
+          navigate('/general');
+        }
+        // --- CHANGE END ---
       }
     };
 
@@ -78,7 +90,15 @@ export default function AuthPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate('/form');
+        // --- CHANGE START: Set timestamp and redirect to general page on sign-in ---
+        localStorage.setItem('loginTimestamp', Date.now().toString());
+        navigate('/general');
+        // --- CHANGE END ---
+      }
+      if (event === 'SIGNED_OUT') {
+        // --- CHANGE START: Clear timestamp on sign-out ---
+        localStorage.removeItem('loginTimestamp');
+        // --- CHANGE END ---
       }
     });
 
@@ -138,7 +158,11 @@ export default function AuthPage() {
           password: formData.password
         });
         if (signInError) throw signInError;
-        navigate('/form');
+
+        // --- CHANGE START: Set timestamp and redirect to general page on successful login ---
+        localStorage.setItem('loginTimestamp', Date.now().toString());
+        navigate('/general');
+        // --- CHANGE END ---
 
       } else if (authMode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(formData.emailOrUsername, {
@@ -180,21 +204,18 @@ export default function AuthPage() {
   };
 
   return (
-    // --- THEME CHANGE: Background changed to silver grey ---
     <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
-        // --- THEME CHANGE: Container is now white with a shadow ---
         className="max-w-md w-full bg-white rounded-2xl border border-gray-300 p-8 shadow-2xl"
       >
         <div className="text-center mb-8">
           <div className="flex w-full justify-between items-center">
             <div className="w-7"></div>
             <motion.h1
-              // --- THEME CHANGE: Text is now dark for contrast ---
               className="text-3xl font-bold text-gray-800"
               onClick={handleLogoClick}
             >
@@ -203,7 +224,6 @@ export default function AuthPage() {
                   'Reset Password'}
             </motion.h1>
             <motion.button
-              // --- THEME CHANGE: Icon color adjusted ---
               className="text-gray-500 hover:text-gray-800 transition-colors"
               onClick={() => navigate('/')}
               whileHover={{ scale: 1.1 }}
@@ -214,7 +234,6 @@ export default function AuthPage() {
             </motion.button>
           </div>
           <motion.p
-            // --- THEME CHANGE: Text is now dark for contrast ---
             className="text-gray-600 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
             {authMode === 'signup' && 'Join our data platform'}
@@ -232,7 +251,6 @@ export default function AuthPage() {
             >
               <Link
                 to="/admin"
-                // --- THEME CHANGE: Button adapted to new theme ---
                 className="w-full bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm"
               >
                 <Settings className="w-4 h-4" />
@@ -244,7 +262,6 @@ export default function AuthPage() {
 
         {message && (
           <motion.div
-            // --- THEME CHANGE: Message boxes adapted to new theme ---
             className={`flex items-center space-x-2 p-4 rounded-lg mb-6 ${messageType === 'success'
               ? 'text-green-800 bg-green-100 border border-green-300'
               : 'text-red-800 bg-red-100 border border-red-300'
@@ -256,7 +273,6 @@ export default function AuthPage() {
         )}
 
         <form onSubmit={handleAuth} className="space-y-6">
-          {/* LOGIN MODE FIELDS */}
           {authMode === 'login' && (
             <>
               <div className="relative">
@@ -265,7 +281,6 @@ export default function AuthPage() {
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                   required
-                  // --- THEME CHANGE: Input fields are now light ---
                   className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select Organization</option>
@@ -290,7 +305,6 @@ export default function AuthPage() {
             </>
           )}
 
-          {/* SIGN UP MODE FIELDS */}
           {authMode === 'signup' && (
             <>
               <div className="relative">
@@ -386,7 +400,6 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            // --- THEME CHANGE: Button is now a prominent dark color ---
             className="w-full bg-gray-500 hover:bg-gray-400 text-white font-semibold py-3 rounded-lg flex justify-center items-center space-x-2"
           >
             {loading ? <Loader2 className="animate-spin" /> : null}

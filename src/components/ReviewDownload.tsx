@@ -327,7 +327,7 @@ export default function ReviewDownload() {
                 <h3 className="text-gray-800 font-medium">Submission Complete</h3>
               </div>
               <p className="text-gray-800 text-sm">
-                ({completedSections.length} of 6 sections completed)
+                ({completedSections.length} of {sections.length} sections completed)
               </p>
             </motion.div>
 

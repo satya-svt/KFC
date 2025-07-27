@@ -14,48 +14,18 @@ import {
 } from 'lucide-react'
 import containerImage from '../assets/737373.jpg';
 import silvergrey from '../assets/silvergrey.jpg'
+import { calculateManureEmissionWithPoultry, MANURE_EMISSION_FACTORS } from '../lib/emissionFactors'
 
-const manureSystemOptions = [
-  'Aerobic treatment - forced aeration',
-  'Aerobic treatment - natural aeration',
-  'Anaerobic digester, High leakage, low quality technology, high quality gas-tight storage technology',
-  'Anaerobic digester, High leakage, low quality technology, low quality gas-tight storage technology',
-  'Anaerobic digester, High leakage, low quality technology, open storage',
-  'Anaerobic digester, Low leakage, High quality gas-tight storage, best complete industrial technology',
-  'Anaerobic digester, Low leakage, High quality industrial technology, low quality gas-tight storage technology',
-  'Anaerobic digester, Low leakage, High quality industrial technology, open storage',
-  'Composting - in vessel (forced aeration)',
-  'Composting - intensive windrow',
-  'Composting - passive windrow (infrequent turning)',
-  'Composting - static pile (forced aeration)',
-  'Daily spread',
-  'Deep bedding - active mixing (< 1 month)',
-  'Deep bedding - active mixing (> 1 month)',
-  'Deep bedding - no mixing (< 1 month)',
-  'Deep bedding - no mixing (> 1 month)',
-  'Dry lot',
-  'Exporting manure off-farm - zero on farm emissions',
-  'Liquid slurry with cover',
-  'Liquid slurry with natural crust cover',
-  'Liquid slurry without natural crust cover',
-  'Pasture',
-  'Pit storage below animal confinements (1 month)',
-  'Pit storage below animal confinements (12 months)',
-  'Pit storage below animal confinements (3 months)',
-  'Pit storage below animal confinements (4 months)',
-  'Pit storage below animal confinements (6 months)',
-  'Poultry manure with litter',
-  'Poultry manure without litter',
-  'Solid storage',
-  'Solid storage - Additives',
-  'Solid storage - Bulking agent addition',
-  'Solid storage - Covered/compacted',
-  'Uncovered anaerobic lagoon'
-]
+const manureSystemOptions = Object.keys(MANURE_EMISSION_FACTORS);
 
 interface ManureSystemRow {
   systemType: string
   daysUsed: string
+}
+
+interface GeneralData {
+  poultry_quantity: string;
+  poultry_unit: string;
 }
 
 export default function ManureManagement() {
@@ -69,25 +39,35 @@ export default function ManureManagement() {
   const [errorMessage, setErrorMessage] = useState('')
   const [userProfile, setUserProfile] = useState<{ organization_name?: string | null, username?: string | null } | null>(null)
   const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true)
+  const [generalData, setGeneralData] = useState<GeneralData | null>(null);
   const entryId = 'entry_1'
 
+  // --- REPLACE YOUR FIRST useEffect WITH THIS UPDATED VERSION ---
   React.useEffect(() => {
-    const loadUserProfile = async () => {
-      const profile = getUserProfile()
-      setUserProfile(profile)
+    const loadAllData = async () => {
+      setUserProfile(await getUserProfile());
       try {
-        const savedData = await loadAutoSavedData('manure', entryId)
-        if (savedData && Array.isArray(savedData) && savedData.length > 0) {
-          setManureSystems(savedData)
+        // Fetch this page's auto-saved data
+        const savedManureData = await loadAutoSavedData('manure', entryId);
+        if (savedManureData && Array.isArray(savedManureData) && savedManureData.length > 0) {
+          setManureSystems(savedManureData);
         }
+
+        // Fetch the GeneralForm's auto-saved data
+        const savedGeneralData = await loadAutoSavedData('general', entryId);
+        if (savedGeneralData && Array.isArray(savedGeneralData) && savedGeneralData.length > 0) {
+          // We only need the first row of the general data
+          setGeneralData(savedGeneralData[0]);
+        }
+
       } catch (error) {
-        console.error('Error loading auto-saved data:', error)
+        console.error('Error loading auto-saved data:', error);
       } finally {
-        setIsLoadingAutoSave(false)
+        setIsLoadingAutoSave(false);
       }
-    }
-    loadUserProfile()
-  }, [])
+    };
+    loadAllData();
+  }, [entryId]);
 
   React.useEffect(() => {
     const handleBeforeUnload = () => {
@@ -140,63 +120,78 @@ export default function ManureManagement() {
 
   const isFormValid = validSystems.length > 0 && totalDaysUsed <= 365
 
+  // --- REPLACE YOUR ENTIRE handleSubmit FUNCTION WITH THIS ---
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (isSubmitting) return
+    if (isSubmitting || !isFormValid) return;
 
-    if (validSystems.length === 0) {
-      setErrorMessage('Please complete at least one manure system entry.')
-      setSubmitStatus('error')
-      return
+    if (!generalData || !generalData.poultry_quantity) {
+      setErrorMessage('Could not load required data from the General page. Please ensure it is filled out.');
+      setSubmitStatus('error');
+      return;
     }
 
     if (totalDaysUsed > 365) {
-      setErrorMessage('Total usage days cannot exceed 365 days per year.')
-      setSubmitStatus('error')
-      return
+      setErrorMessage('Total usage days cannot exceed 365 days per year.');
+      setSubmitStatus('error');
+      return;
     }
 
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
-    setErrorMessage('')
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
     try {
-      const userEmail = await getCurrentUserEmail()
-      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
+      const userEmail = await getCurrentUserEmail();
+      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.');
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) { // Check for both error and null user
-        throw new Error('User not found or not logged in. Please ensure you are logged in.');
+      if (userError || !user) {
+        throw new Error('User not found or not logged in.');
       }
-      const dataToInsert = validSystems.map(system => ({
-        name: system.systemType,
-        description: `${system.daysUsed} days per year`,
-        category: 'manure_management',
-        value: parseInt(system.daysUsed),
-        status: 'active',
-        tags: [system.systemType, 'manure_management'],
-        priority: 'medium',
-        user_id: user.id,
-        user_email: user.email,
-        organization_name: userProfile?.organization_name || null
-      }))
 
-      const { error } = await supabase.from('data_rows').insert(dataToInsert)
-      if (error) throw error
+      const dataToInsert = validSystems.map(system => {
+        const daysUsed = parseInt(system.daysUsed) || 0;
+        const manureFactor = MANURE_EMISSION_FACTORS[system.systemType] || 0;
+        const poultryQuantity = parseFloat(generalData.poultry_quantity) || 0;
+        const poultryUnit = generalData.poultry_unit || '';
 
-      await clearAutoSavedData('manure', entryId)
-      setSubmitStatus('success')
-      setManureSystems([{ systemType: '', daysUsed: '' }])
+        // Call the new calculation function
+        const manureEmission = calculateManureEmissionWithPoultry(
+          poultryQuantity,
+          poultryUnit,
+          manureFactor,
+          daysUsed
+        );
+
+        return {
+          name: system.systemType,
+          description: `${daysUsed} days per year`,
+          category: 'manure', // Changed to be consistent with Admin Dashboard
+          value: daysUsed,
+          user_id: user.id,
+          user_email: user.email,
+          organization_name: userProfile?.organization_name || null,
+          manure_emission: manureEmission // The new calculated value
+        };
+      });
+
+      const { error } = await supabase.from('data_rows').insert(dataToInsert);
+      if (error) throw error;
+
+      await clearAutoSavedData('manure', entryId);
+      setSubmitStatus('success');
+      setManureSystems([{ systemType: '', daysUsed: '' }]);
 
     } catch (error) {
-      console.error('Error submitting manure management data:', error)
-      setSubmitStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Error submitting manure management data:', error);
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (isLoadingAutoSave) {
     return (

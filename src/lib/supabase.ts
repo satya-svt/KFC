@@ -98,4 +98,5 @@ export interface ResponseData {
   etp_type?: string; // text null
   water_treatment_type?: string; // text null
   waste_emission?: number; // numeric null
+  manure_emission?: number; // numeric null
 }

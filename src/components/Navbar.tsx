@@ -57,7 +57,7 @@ export default function Navbar() {
     setTimeout(() => setClickCount(0), 3000);
   };
 
-  const isActivePage = (path) => location.pathname === path;
+  const isActivePage = (path: string) => location.pathname === path;
 
   return (
     <motion.nav

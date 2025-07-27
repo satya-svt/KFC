@@ -26,7 +26,8 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) return
 
-      const userProfile = getUserProfile()
+      // FIX: Add 'await' to correctly get the user profile
+      const userProfile = await getUserProfile()
 
       const autoSaveData: AutoSaveData = {
         user_email: userEmail,
@@ -37,7 +38,6 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
         form_data: formData
       }
 
-      // Use .contains for tags
       const { data: existing, error: fetchError } = await supabase
         .from('data_rows')
         .select('id')
@@ -218,7 +218,7 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
     const userEmail = await getCurrentUserEmail()
     if (!userEmail) return
 
-    const userProfile = getUserProfile()
+    const userProfile = await getUserProfile()
 
     const autoSaveData: AutoSaveData = {
       user_email: userEmail,
