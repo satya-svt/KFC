@@ -422,7 +422,7 @@ export default function AdminDashboard() {
 
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-        // --- 8. REPLACE your "Filter by Organization" div with this updated version ---
+
           <motion.div className="mb-8" >
             <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
               <div className="flex justify-between items-center mb-4">
