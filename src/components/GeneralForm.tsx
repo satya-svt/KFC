@@ -10,7 +10,8 @@ import {
     ChevronDown,
     ClipboardList,
     Hash,
-    Home
+    Home,
+    ArrowLeft // --- CHANGE: Import the ArrowLeft icon ---
 } from 'lucide-react'
 import silvergrey from '../assets/silvergrey.jpg'
 import containerImage from '../assets/737373.jpg'
@@ -41,7 +42,7 @@ export default function GeneralForm() {
 
     React.useEffect(() => {
         const loadUserProfileAndAutoSave = async () => {
-            const profile = getUserProfile()
+            const profile = await getUserProfile(); // Corrected with await
             setUserProfile(profile)
             try {
                 const savedData = await loadAutoSavedData('general', entryId)
@@ -120,7 +121,7 @@ export default function GeneralForm() {
             if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
 
             const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) { // Check for both error and null user
+            if (userError || !user) {
                 throw new Error('User not found or not logged in. Please ensure you are logged in.');
             }
             const validRows = generalRows.filter(row =>
@@ -165,12 +166,7 @@ export default function GeneralForm() {
 
     if (isLoadingAutoSave) {
         return (
-            <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
-                style={{
-                    backgroundImage: `url(${silvergrey})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                }}>
+            <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center">
                 <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
             </motion.div>
         )
@@ -215,12 +211,30 @@ export default function GeneralForm() {
                 className="max-w-4xl w-full rounded-2xl border border-gray-300 p-10 shadow-xl"
                 style={{ backgroundImage: `url(${containerImage})`, backgroundSize: 'cover' }}
             >
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center space-x-3 mb-2">
-                        <ClipboardList className="w-8 h-8 text-white" />
-                        <h1 className="text-3xl font-bold text-white">GENERAL</h1>
+                {/* --- CHANGE START: The header is updated to include the back button --- */}
+                <div className="flex items-center justify-between mb-8">
+                    <motion.button
+                        type="button"
+                        onClick={() => navigate('/auth')}
+                        className="bg-gray-700/50 hover:bg-gray-600/50 text-white p-2 rounded-lg transition-all duration-300 flex items-center space-x-2 backdrop-blur-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title="Back to Login"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </motion.button>
+
+                    <div className="text-center">
+                        <div className="flex items-center justify-center space-x-3 mb-2">
+                            <ClipboardList className="w-8 h-8 text-white" />
+                            <h1 className="text-3xl font-bold text-white">GENERAL</h1>
+                        </div>
                     </div>
+
+                    {/* Placeholder div to keep the title centered */}
+                    <div className="w-10 h-10"></div>
                 </div>
+                {/* --- CHANGE END --- */}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -292,7 +306,6 @@ export default function GeneralForm() {
                         ))}
                     </div>
 
-                    {/* --- FIX: The button below is now updated to match the style of the other forms --- */}
                     <motion.button
                         type="submit"
                         disabled={!canSubmit}
@@ -320,7 +333,6 @@ export default function GeneralForm() {
                             </>
                         )}
                     </motion.button>
-                    {/* --- END OF FIX --- */}
                 </form>
             </motion.div>
         </motion.div>

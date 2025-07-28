@@ -23,12 +23,6 @@ import {
 
 type AuthMode = 'login' | 'signup' | 'forgot';
 
-const organizationOptions = [
-  'org1', 'org2', 'org3', 'org4', 'org5', 'org6', 'org7', 'org8', 'org9', 'org10',
-  'org11', 'org12', 'org13', 'org14', 'org15', 'org16', 'org17', 'org18', 'org19', 'org20',
-  'org21', 'org22', 'org23', 'org24', 'org25', 'org26', 'org27', 'org28', 'org29', 'org30'
-];
-
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -43,6 +37,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [organizationOptions, setOrganizationOptions] = useState<string[]>([]);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,6 +56,18 @@ export default function AuthPage() {
   });
 
   useEffect(() => {
+    const fetchOrganizations = async () => {
+      const { data, error } = await supabase.from('organizations').select('name').order('name');
+      if (error) {
+        console.error("Error fetching organizations:", error);
+      } else if (data) {
+        setOrganizationOptions(data.map(org => org.name));
+      }
+    };
+    fetchOrganizations();
+  }, []);
+
+  useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const mode = searchParams.get('mode');
     if (mode === 'signup') {
@@ -70,19 +77,15 @@ export default function AuthPage() {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // --- CHANGE START: Implement 5-minute session check ---
         const loginTimestamp = localStorage.getItem('loginTimestamp');
-        const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+        const fiveMinutes = 5 * 60 * 1000;
 
         if (loginTimestamp && (Date.now() - parseInt(loginTimestamp, 10)) > fiveMinutes) {
-          // If session is older than 5 minutes, sign out and stay on login page
           supabase.auth.signOut();
           localStorage.removeItem('loginTimestamp');
         } else {
-          // If session is recent, redirect to the general form
-          navigate('/general');
+          navigate('/auth');
         }
-        // --- CHANGE END ---
       }
     };
 
@@ -90,21 +93,18 @@ export default function AuthPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // --- CHANGE START: Set timestamp and redirect to general page on sign-in ---
         localStorage.setItem('loginTimestamp', Date.now().toString());
         navigate('/general');
-        // --- CHANGE END ---
       }
       if (event === 'SIGNED_OUT') {
-        // --- CHANGE START: Clear timestamp on sign-out ---
         localStorage.removeItem('loginTimestamp');
-        // --- CHANGE END ---
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate, location.search]);
 
+  // --- CHANGE START: The handleAuth function is updated with new, secure logic for 'forgot' mode ---
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -159,16 +159,32 @@ export default function AuthPage() {
         });
         if (signInError) throw signInError;
 
-        // --- CHANGE START: Set timestamp and redirect to general page on successful login ---
         localStorage.setItem('loginTimestamp', Date.now().toString());
         navigate('/general');
-        // --- CHANGE END ---
 
       } else if (authMode === 'forgot') {
-        const { error } = await supabase.auth.resetPasswordForEmail(formData.emailOrUsername, {
+        // 1. Check if an organization is selected
+        if (!formData.organizationName) {
+          throw new Error('Please select your organization to reset the password.');
+        }
+
+        // 2. Find the email associated with that organization
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('organization_name', formData.organizationName)
+          .single();
+
+        if (profileError || !profile) {
+          throw new Error('Organization not found.');
+        }
+
+        // 3. Send the reset email to the correct, associated email address
+        const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
           redirectTo: `${window.location.origin}/reset-password`
         });
         if (error) throw error;
+
         setMessage('Password reset email sent!');
         setMessageType('success');
       }
@@ -190,6 +206,7 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+  // --- CHANGE END ---
 
   const handleLogoClick = () => {
     setClickCount(prev => prev + 1);
@@ -237,7 +254,9 @@ export default function AuthPage() {
             className="text-gray-600 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
             {authMode === 'signup' && 'Join our data platform'}
-            {authMode === 'forgot' && 'Enter your email to reset password'}
+            {/* --- CHANGE START: Updated instruction text for forgot mode --- */}
+            {authMode === 'forgot' && 'Select your organization to reset your password'}
+            {/* --- CHANGE END --- */}
           </motion.p>
         </div>
 
@@ -383,19 +402,23 @@ export default function AuthPage() {
             </>
           )}
 
+          {/* --- CHANGE START: The UI for 'forgot' mode is now updated to only show the organization dropdown --- */}
           {authMode === 'forgot' && (
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="email"
-                value={formData.emailOrUsername}
-                onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
-                placeholder="Enter your email"
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={formData.organizationName}
+                onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800"
-              />
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 appearance-none cursor-pointer"
+              >
+                <option value="" disabled>Select Organization</option>
+                {organizationOptions.map(org => (<option key={org} value={org}>{org}</option>))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             </div>
           )}
+          {/* --- CHANGE END --- */}
 
           <button
             type="submit"
@@ -415,9 +438,15 @@ export default function AuthPage() {
         <div className="mt-6 text-center text-sm text-gray-500 space-y-1">
           {authMode === 'login' && (
             <>
-              <button onClick={() => setAuthMode('forgot')} className="hover:underline">
+              {/* --- CHANGE START: The "Forgot Password?" button is now disabled if no organization is selected --- */}
+              <button
+                onClick={() => setAuthMode('forgot')}
+                className="hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!formData.organizationName}
+              >
                 Forgot Password?
               </button>
+              {/* --- CHANGE END --- */}
               <div>
                 Don't have an account?{' '}
                 <button onClick={() => setAuthMode('signup')} className="text-gray-800 font-semibold hover:underline">

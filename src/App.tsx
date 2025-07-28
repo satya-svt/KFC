@@ -16,6 +16,8 @@ import WasteManagement from './components/WasteManagement';
 import Transport from './components/Transport';
 import ReviewDownload from './components/ReviewDownload';
 import GeneralForm from './components/GeneralForm'
+import ResetPasswordPage from './components/ResetPasswordPage';
+import ComparisonPage from './components/ComparisonPage';
 
 // This new layout component will wrap all protected pages to give them the Navbar
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
@@ -38,10 +40,11 @@ function App() {
       <Route path="/general" element={<GeneralForm />} /> {/* General Form route*/}
       {/* Route 2: The public authentication page. */}
       <Route path="/auth" element={<AuthPage />} />
-
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       {/* Route 3: The admin dashboard. */}
       <Route path="/admin" element={<AdminDashboard />} />
 
+      <Route path="/compare" element={<ProtectedLayout><ComparisonPage /></ProtectedLayout>} />
       {/* --- Protected Routes with Navbar --- */}
       {/* These routes are for logged-in users and will have the main Navbar. */}
       <Route path="/form" element={<ProtectedLayout><UserForm /></ProtectedLayout>} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, ResponseData } from '../lib/supabase'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -10,6 +10,9 @@ import {
   Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap, Search // --- CHANGE: Import the Search icon ---
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import {
+  PlusCircle, Users, Trash2
+} from 'lucide-react'
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
@@ -27,6 +30,10 @@ export default function AdminDashboard() {
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const [organizations, setOrganizations] = useState<string[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, org: string } | null>(null);
   // --- CHANGE START: Add state for the organization search term ---
   const [orgSearchTerm, setOrgSearchTerm] = useState('');
   // --- CHANGE END ---
@@ -95,23 +102,65 @@ export default function AdminDashboard() {
   const CurrentIcon = modeConfig[dashboardMode].icon;
   const currentTheme = modeConfig[dashboardMode].theme;
 
-  // --- CHANGE START: Filter the list of unique organizations based on the search term ---
-  const uniqueOrgs = useMemo(() => {
-    const orgNames = responses
-      .map(r => r.organization_name)
-      .filter((name): name is string => !!name);
 
-    const uniqueNames = Array.from(new Set(orgNames));
-
-    if (!orgSearchTerm) {
-      return uniqueNames;
+  const fetchOrganizations = async () => {
+    const { data, error } = await supabase.from('organizations').select('name').order('name');
+    if (data) {
+      setOrganizations(data.map(o => o.name));
     }
+  };
 
-    return uniqueNames.filter(org =>
-      org.toLowerCase().includes(orgSearchTerm.toLowerCase())
-    );
-  }, [responses, orgSearchTerm]);
-  // --- CHANGE END ---
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrganizations();
+    }
+  }, [isAuthenticated]);
+
+
+  const filteredOrganizations = useMemo(() => {
+    if (!orgSearchTerm) return organizations;
+    return organizations.filter(org => org.toLowerCase().includes(orgSearchTerm.toLowerCase()));
+  }, [organizations, orgSearchTerm]);
+
+  // --- 7. ADD this entire block of new functions inside your AdminDashboard component ---
+  const handleAddOrganization = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim()) return;
+
+    const { error } = await supabase.from('organizations').insert({ name: newOrgName.trim() });
+    if (error) {
+      alert(`Error adding organization: ${error.message}`);
+    } else {
+      setNewOrgName('');
+      setIsAddModalOpen(false);
+      fetchOrganizations(); // Refresh the list
+    }
+  };
+
+  const handleDeleteOrganization = async (orgName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${orgName}"? This will delete the organization, all of its users, and all of their data. This action cannot be undone.`)) {
+      setContextMenu(null);
+      const { error } = await supabase.rpc('delete_organization', { org_name: orgName });
+      if (error) {
+        alert(`Error deleting organization: ${error.message}`);
+      } else {
+        fetchOrganizations(); // Refresh the list
+        fetchResponses(); // Refresh the data rows
+      }
+    }
+  };
+
+  const handleRightClick = (e: React.MouseEvent, org: string) => {
+    e.preventDefault();
+    setContextMenu({ x: e.pageX, y: e.pageY, org });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const orgFilteredResponses = useMemo(() => {
     return selectedOrg === 'all'
@@ -373,9 +422,47 @@ export default function AdminDashboard() {
 
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Filter by Organization</h3>
-          </div>
+        // --- 8. REPLACE your "Filter by Organization" div with this updated version ---
+          <motion.div className="mb-8" >
+            <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Filter by Organization</h3>
+                <div className="flex gap-2">
+                  <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 text-sm bg-blue-600/50 hover:bg-blue-600/80 px-3 py-1.5 rounded-lg">
+                    <PlusCircle size={16} /> Add
+                  </button>
+                  <button onClick={() => navigate('/compare')} className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg">
+                    <Users size={16} /> Compare
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search organizations..."
+                  value={orgSearchTerm}
+                  onChange={(e) => setOrgSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
+                {filteredOrganizations.map(org => (
+                  <button
+                    key={org}
+                    onContextMenu={(e) => handleRightClick(e, org)}
+                    onClick={() => setSelectedOrg(org)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === org ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                  >
+                    {org} ({orgCounts[org] || 0})
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
 
           {/* --- CHANGE START: Add the search input field --- */}
           <div className="relative mb-4">
@@ -392,7 +479,7 @@ export default function AdminDashboard() {
 
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
-            {uniqueOrgs.map(org => (
+            {filteredOrganizations.map(org => (
               <button
                 key={org}
                 onClick={() => setSelectedOrg(org)}
@@ -470,6 +557,7 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
+      {/* Raw Data */}
       <motion.div className="mt-10" >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Raw {dashboardMode} Data</h2>
@@ -529,6 +617,37 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </motion.div>
-    </motion.div>
+
+      {/* --- THIS IS THE CORRECT PLACEMENT FOR THE MODALS --- */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              className="bg-gray-800 p-6 rounded-lg w-full max-w-sm"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+            >
+              <h2 className="text-xl font-bold mb-4">Add New Organization</h2>
+              <form onSubmit={handleAddOrganization}>
+                <input type="text" value={newOrgName} onChange={e => setNewOrgName(e.target.value)} placeholder="Enter organization name" className="w-full p-2 bg-gray-700 rounded-md mb-4 text-white" required />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 bg-gray-600 rounded-md">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-blue-600 rounded-md">Save</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+        {contextMenu && (
+          <div style={{ top: contextMenu.y, left: contextMenu.x }} className="absolute bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50">
+            <button onClick={() => handleDeleteOrganization(contextMenu.org)} className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/20 flex items-center gap-2">
+              <Trash2 size={16} /> Delete "{contextMenu.org}"
+            </button>
+          </div>
+        )}
+      </AnimatePresence>
+
+    </motion.div> // <-- This is the final closing tag for the entire page
   )
 }
