@@ -44,7 +44,7 @@ function App() {
       {/* Route 3: The admin dashboard. */}
       <Route path="/admin" element={<AdminDashboard />} />
 
-      <Route path="/compare" element={<ProtectedLayout><ComparisonPage /></ProtectedLayout>} />
+      <Route path="/compare" element={<ComparisonPage />} />
       {/* --- Protected Routes with Navbar --- */}
       {/* These routes are for logged-in users and will have the main Navbar. */}
       <Route path="/form" element={<ProtectedLayout><UserForm /></ProtectedLayout>} />
