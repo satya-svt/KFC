@@ -26,7 +26,10 @@ export default function AdminDashboard() {
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // --- ADDED: State for the organization search term ---
   const [orgSearchTerm, setOrgSearchTerm] = useState('');
+
   const [organizations, setOrganizations] = useState<string[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
@@ -377,7 +380,7 @@ export default function AdminDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <motion.div className="flex justify-between items-center mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} >
+      <motion.div className="flex justify-between items-center mb-6" >
         <div className="flex items-center space-x-4">
           <motion.button onClick={() => navigate('/')} className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all" title="Back to Home" >
             <ArrowLeft className="w-5 h-5" />
@@ -388,7 +391,10 @@ export default function AdminDashboard() {
           <motion.button onClick={exportData} className="bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-all" >
             <Download className="w-4 h-4" /> Export Excel
           </motion.button>
-          <motion.button onClick={() => setIsAuthenticated(false)} className="bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-all" >
+          <motion.button onClick={() => {
+            setIsAuthenticated(false);
+            localStorage.removeItem('isAdminAuthenticated');
+          }} className="bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-all" >
             <LogOut className="w-4 h-4" /> Logout
           </motion.button>
         </div>
@@ -401,7 +407,7 @@ export default function AdminDashboard() {
         </div>
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Unique {dashboardMode} Types</p>
-
+          <p className="text-3xl font-bold">{Object.keys(summaryStats.responsesByCategory).length}</p>
         </div>
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Most Common {dashboardMode} Type</p>
@@ -409,7 +415,6 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* --- FIX: This entire 'Filter by Organization' section has been cleaned up to remove the duplicate box --- */}
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <div className="flex justify-between items-center mb-4">
@@ -418,14 +423,14 @@ export default function AdminDashboard() {
               <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 text-sm bg-blue-600/50 hover:bg-blue-600/80 px-3 py-1.5 rounded-lg">
                 <PlusCircle size={16} /> Add
               </button>
-              <button onClick={() => navigate('/compare', { state: { isAdminAuthenticated: true } })} className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg">
+              <button onClick={() => navigate('/compare')} className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg">
                 <Users size={16} /> Compare
               </button>
             </div>
           </div>
 
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-12 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search organizations..."
@@ -450,7 +455,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </motion.div>
-      {/* --- END OF FIX --- */}
 
       <motion.div className="mb-8" >
         <div className="flex items-center justify-between gap-4 mb-4">
@@ -576,7 +580,6 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </motion.div>
-
       <AnimatePresence>
         {isAddModalOpen && (
           <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
