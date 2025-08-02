@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase, getCurrentUserEmail, getUserProfile } from '../lib/supabase'
 import { autoSaveFormData, loadAutoSavedData, clearAutoSavedData, saveFormDataImmediately } from '../lib/autoSave'
+// --- CHANGE START: Import the new calculation logic and factors ---
 import { calculateTransportEmission, TRANSPORT_EMISSION_FACTORS } from '../lib/emissionFactors'
+// --- CHANGE END ---
 import {
   Send,
   CheckCircle,
@@ -17,7 +19,9 @@ import {
 import containerImage from '../assets/737373.jpg'
 import silvergrey from '../assets/silvergrey.jpg'
 
+// --- CHANGE START: Generate vehicle options from the factors object for consistency ---
 const vehicleTypeOptions = Object.keys(TRANSPORT_EMISSION_FACTORS);
+// --- CHANGE END ---
 
 const routeOptions = [
   'Feed Mill',
@@ -34,7 +38,6 @@ interface TransportRow {
 
 export default function Transport() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [transportRows, setTransportRows] = useState<TransportRow[]>([
     { route: '', vehicleType: '', distance: '' }
   ])
@@ -42,14 +45,13 @@ export default function Transport() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [userProfile, setUserProfile] = useState<{ organization_name?: string | null, username?: string | null } | null>(null)
-
   const [isLoadingAutoSave, setIsLoadingAutoSave] = useState(true)
 
   const entryId = 'entry_1'
 
   React.useEffect(() => {
     const loadUserProfile = async () => {
-      const profile = await getUserProfile(); // Added await
+      const profile = await getUserProfile();
       setUserProfile(profile)
 
       try {
@@ -67,27 +69,21 @@ export default function Transport() {
   }, [])
 
   React.useEffect(() => {
-    const handleBeforeUnload = () => {
+    const saveOnExit = () => {
       const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance)
       if (hasData) {
         saveFormDataImmediately('transport', transportRows, entryId)
       }
     }
-
-    const unlisten = () => {
-      handleBeforeUnload()
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
+    window.addEventListener('beforeunload', saveOnExit)
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      unlisten()
+      window.removeEventListener('beforeunload', saveOnExit);
+      saveOnExit();
     }
   }, [transportRows, entryId])
 
   React.useEffect(() => {
-    if (!isLoadingAutoSave && transportRows.length > 0) {
+    if (!isLoadingAutoSave) {
       const hasData = transportRows.some(row => row.route || row.vehicleType || row.distance)
       if (hasData) {
         autoSaveFormData('transport', transportRows, entryId)
@@ -120,6 +116,7 @@ export default function Transport() {
     row.route && row.vehicleType && row.distance
   )
 
+  // --- CHANGE START: Updated handleSubmit to calculate and save the emission value ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -130,8 +127,8 @@ export default function Transport() {
     setErrorMessage('');
 
     try {
-      const userEmail = await getCurrentUserEmail();
-      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found. Please ensure you are logged in.');
 
       const dataToInsert = transportRows.map(row => {
         const distance = parseFloat(row.distance.replace(/,/g, '')) || 0;
@@ -144,7 +141,8 @@ export default function Transport() {
           description: `${row.distance} km`,
           category: 'transport',
           value: distance,
-          user_email: userEmail,
+          user_id: user.id,
+          user_email: user.email,
           organization_name: userProfile?.organization_name || null,
           transport_emission: transportEmission // Add the new emission field
         };
@@ -155,7 +153,7 @@ export default function Transport() {
 
       await clearAutoSavedData('transport', entryId);
       setSubmitStatus('success');
-      setTransportRows([{ route: '', vehicleType: '', distance: '' }]); // Reset form
+      setTransportRows([{ route: '', vehicleType: '', distance: '' }]);
 
     } catch (error) {
       console.error('Error submitting transport data:', error);
@@ -165,6 +163,7 @@ export default function Transport() {
       setIsSubmitting(false);
     }
   };
+  // --- CHANGE END ---
 
   if (isLoadingAutoSave) {
     return (
@@ -210,14 +209,12 @@ export default function Transport() {
   }
 
   return (
-    // --- THEME CHANGE: Main container background ---
     <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center p-4"
       style={{
         backgroundImage: `url(${silvergrey})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}>
-      {/* --- THEME CHANGE: Form container styling --- */}
       <motion.div
         className="max-w-4xl w-full bg-white rounded-2xl border border-gray-300 p-10 shadow-xl"
         style={{
@@ -236,20 +233,15 @@ export default function Transport() {
           transition={{ delay: 0.1 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-2">
-            {/* --- THEME CHANGE: Header icon and text --- */}
-            <Truck className="w-8 h-8 text-blue-600" />
+            <Truck className="w-8 h-8 text-white" />
             <h1 className="text-3xl font-bold text-white">Transport</h1>
           </div>
           <p className="text-gray-200">Record your transportation data</p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* --- THEME CHANGE: Instructions box --- */}
           <motion.div
             className="bg-white border border-gray-300 rounded-lg p-4 mb-6"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
           >
             <div className="flex items-start space-x-3">
               <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center mt-0.5">
@@ -266,12 +258,8 @@ export default function Transport() {
             </div>
           </motion.div>
 
-          {/* --- THEME CHANGE: Table container --- */}
           <motion.div
             className="bg-white border border-gray-300 rounded-lg overflow-hidden relative"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
           >
             <div className="overflow-x-auto pb-20">
               {transportRows.map((row, rowIndex) => (

@@ -14,61 +14,53 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   }
 })
-// Get current user's email from Supabase session
+
 export const getCurrentUserEmail = async (): Promise<string | null> => {
   const { data: { user } } = await supabase.auth.getUser()
   return user?.email || null
 }
 
-// Get user profile information from local storage
-export const getUserProfile = () => {
-  // First try to get from userProfile (set after profile completion)
-  const userProfileStr = localStorage.getItem('userProfile')
-  if (userProfileStr) {
-    try {
-      const userProfile = JSON.parse(userProfileStr)
-      if (userProfile.username) {
-        return {
-          username: userProfile.username,
-          organization_name: userProfile.organization_name || null
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing user profile:', error)
-    }
+// --- CHANGE START: The entire function below has been replaced ---
+// It no longer uses localStorage and now fetches the profile directly from the database.
+/**
+ * Gets the profile information of the current logged-in user directly from the database.
+ * @returns The user's profile object or null if not found.
+ */
+export const getUserProfile = async (): Promise<{ username: string | null, organization_name: string | null } | null> => {
+  // 1. Get the current user session securely from Supabase
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    // If no user is logged in, there is no profile to fetch
+    return null;
   }
 
-  // Fallback to pendingUserProfile (set during registration)
-  const pendingProfileStr = localStorage.getItem('pendingUserProfile')
-  if (pendingProfileStr) {
-    try {
-      const pendingProfile = JSON.parse(pendingProfileStr)
-      if (pendingProfile.username) {
-        // Transfer pending profile to active profile
-        localStorage.setItem('userProfile', JSON.stringify({
-          username: pendingProfile.username,
-          organization_name: pendingProfile.organization_name || null,
-          user_email: pendingProfile.email
-        }))
-        // Remove pending profile
-        localStorage.removeItem('pendingUserProfile')
+  try {
+    // 2. Use the user's ID to fetch their specific profile from the 'profiles' table
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('username, organization_name')
+      .eq('id', user.id)
+      .single();
 
-        return {
-          username: pendingProfile.username,
-          organization_name: pendingProfile.organization_name || null
-        }
+    if (error) {
+      // This can happen if the profile hasn't been created yet, which is okay.
+      if (error.code !== 'PGRST116') { // PGRST116 = "exact one row not found"
+        console.error("Error fetching user profile:", error);
       }
-    } catch (error) {
-      console.error('Error parsing pending user profile:', error)
+      return null;
     }
-  }
 
-  // Return null values if no valid profile found
-  return {
-    username: null,
-    organization_name: null
+    // 3. Return the correct profile data from the database
+    return profile;
+
+  } catch (error) {
+    console.error("An error occurred while fetching the profile:", error);
+    return null;
   }
 }
+// --- CHANGE END ---
+
 export interface ResponseData {
   id: string; // uuid
   name: string; // text
