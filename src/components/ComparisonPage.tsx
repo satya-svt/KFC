@@ -43,8 +43,8 @@ export default function ComparisonPage() {
     const comparisonData = useMemo(() => {
         if (!orgA || !orgB) return [];
 
-        const categories = ['feed', 'manure', 'energy_processing', 'waste'];
-        const emissionKeys: (keyof ResponseData)[] = ['feed_emission', 'manure_emission', 'energy_emission', 'waste_emission'];
+        const categories = ['feed', 'manure', 'energy_processing', 'waste', 'transport'];
+        const emissionKeys: (keyof ResponseData)[] = ['feed_emission', 'manure_emission', 'energy_emission', 'waste_emission', 'transport_emission'];
 
         const calculateTotalEmissions = (orgName: string, category: string, key: keyof ResponseData) => {
             return data

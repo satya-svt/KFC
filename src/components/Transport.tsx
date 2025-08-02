@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase, getCurrentUserEmail, getUserProfile } from '../lib/supabase'
 import { autoSaveFormData, loadAutoSavedData, clearAutoSavedData, saveFormDataImmediately } from '../lib/autoSave'
+import { calculateTransportEmission, TRANSPORT_EMISSION_FACTORS } from '../lib/emissionFactors'
 import {
   Send,
   CheckCircle,
@@ -16,15 +17,7 @@ import {
 import containerImage from '../assets/737373.jpg'
 import silvergrey from '../assets/silvergrey.jpg'
 
-const vehicleTypeOptions = [
-  'LGV ( < 3.5 tons ) - Diesel',
-  'LGV ( < 3.5 tons ) - Petrol',
-  'LGV ( < 3.5 tons ) - Electric',
-  'LGV ( < 3.5 tons ) - CNG',
-  'MGV ( 3.5 - 7.5 tons ) - Diesel',
-  'MGV ( 3.5 - 7.5 tons ) - CNG',
-  'HGV ( > 7.5 tons ) - Diesel',
-]
+const vehicleTypeOptions = Object.keys(TRANSPORT_EMISSION_FACTORS);
 
 const routeOptions = [
   'Feed Mill',
@@ -56,7 +49,7 @@ export default function Transport() {
 
   React.useEffect(() => {
     const loadUserProfile = async () => {
-      const profile = getUserProfile()
+      const profile = await getUserProfile(); // Added await
       setUserProfile(profile)
 
       try {
@@ -128,61 +121,50 @@ export default function Transport() {
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (isSubmitting) return
+    if (isSubmitting || !isFormValid) return;
 
-    if (!isFormValid) {
-      setErrorMessage('Please complete all transport fields.')
-      setSubmitStatus('error')
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitStatus('idle')
-    setErrorMessage('')
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
     try {
-      const userEmail = await getCurrentUserEmail()
-      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.')
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) { // Check for both error and null user
-        throw new Error('User not found or not logged in. Please ensure you are logged in.');
-      }
+      const userEmail = await getCurrentUserEmail();
+      if (!userEmail) throw new Error('User email not found. Please ensure you are logged in.');
 
       const dataToInsert = transportRows.map(row => {
-        const distance = parseFloat(row.distance.replace(/,/g, '')) || 0
+        const distance = parseFloat(row.distance.replace(/,/g, '')) || 0;
+
+        // Call the new calculation function
+        const transportEmission = calculateTransportEmission(distance, row.vehicleType);
 
         return {
           name: `${row.route} - ${row.vehicleType}`,
           description: `${row.distance} km`,
           category: 'transport',
           value: distance,
-          status: 'active',
-          tags: [row.route.toLowerCase().replace(/\s+/g, '_'), row.vehicleType.toLowerCase().replace(/\s+/g, '_'), 'transport'],
-          priority: 'medium',
-          user_id: user.id,
-          user_email: user.email,
-          organization_name: userProfile?.organization_name || null
-        }
-      })
+          user_email: userEmail,
+          organization_name: userProfile?.organization_name || null,
+          transport_emission: transportEmission // Add the new emission field
+        };
+      });
 
-      const { error } = await supabase.from('data_rows').insert(dataToInsert)
-      if (error) throw error
+      const { error } = await supabase.from('data_rows').insert(dataToInsert);
+      if (error) throw error;
 
-      await clearAutoSavedData('transport', entryId)
-
-      setSubmitStatus('success')
+      await clearAutoSavedData('transport', entryId);
+      setSubmitStatus('success');
+      setTransportRows([{ route: '', vehicleType: '', distance: '' }]); // Reset form
 
     } catch (error) {
-      console.error('Error submitting transport data:', error)
-      setSubmitStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Error submitting transport data:', error);
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (isLoadingAutoSave) {
     return (

@@ -267,3 +267,43 @@ export const calculateWasteWaterEmission = (
 
   return emissionInTons;
 };
+
+interface TransportFactors {
+  ttw: number; // Tank to Wheel
+  wtt: number; // Well to Tank
+}
+
+// New constant holding the transport emission factors
+export const TRANSPORT_EMISSION_FACTORS: Record<string, TransportFactors> = {
+  'LGV ( < 3.5 tons ) - Diesel': { ttw: 0.21, wtt: 0.04 },
+  'LGV ( < 3.5 tons ) - CNG': { ttw: 0.08, wtt: 0.02 },
+  'LGV ( < 3.5 tons ) - Petrol': { ttw: 0.15, wtt: 0.03 },
+  'LGV ( < 3.5 tons ) - Electric': { ttw: 0.05, wtt: 0.00 },
+  'MGV ( 3.5 - 7.5 tons ) - Diesel': { ttw: 0.23, wtt: 0.05 },
+  'MGV ( 3.5 - 7.5 tons ) - CNG': { ttw: 0.10, wtt: 0.03 },
+  'HGV ( > 7.5 tons ) - Diesel': { ttw: 0.25, wtt: 0.06 }
+};
+
+/**
+ * Calculates transport emissions by summing TTW and WTT.
+ * @param distance - The distance traveled in km.
+ * @param vehicleType - The type of vehicle used.
+ * @returns The final total emission value in Tons.
+ */
+export const calculateTransportEmission = (
+  distance: number,
+  vehicleType: string
+): number => {
+  // 1. Find the factor object for the given vehicle type
+  const factors = TRANSPORT_EMISSION_FACTORS[vehicleType];
+  if (!factors) {
+    return 0; // Return 0 if the vehicle type is not found
+  }
+
+  // 2. Calculate TTW and WTT emissions in Tons
+  const ttwEmission = (factors.ttw * distance) / 1000;
+  const wttEmission = (factors.wtt * distance) / 1000;
+
+  // 3. Return the sum of the two values
+  return ttwEmission + wttEmission;
+};

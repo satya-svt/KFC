@@ -7,13 +7,13 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import {
-  Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap, Search, PlusCircle, Users, Trash2
+  Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap, Search, PlusCircle, Users, Trash2, Truck
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
-type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste';
+type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste' | 'Transport';
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -26,10 +26,7 @@ export default function AdminDashboard() {
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // --- ADDED: State for the organization search term ---
   const [orgSearchTerm, setOrgSearchTerm] = useState('');
-
   const [organizations, setOrganizations] = useState<string[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
@@ -93,6 +90,18 @@ export default function AdminDashboard() {
         statText: 'text-cyan-300',
         statSubText: 'text-cyan-200',
         badge: 'px-2 py-1 rounded-full text-xs bg-cyan-900/20 text-cyan-400 border border-cyan-500/20'
+      }
+    },
+    'Transport': {
+      icon: Truck,
+      emissionKey: 'transport_emission',
+      categoryNames: ['transport'],
+      theme: {
+        icon: 'text-purple-400',
+        statCard: 'bg-gradient-to-r from-purple-600/20 to-purple-800/20 border border-purple-500/20',
+        statText: 'text-purple-300',
+        statSubText: 'text-purple-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-purple-900/20 text-purple-400 border border-purple-500/20'
       }
     }
   };
@@ -164,14 +173,30 @@ export default function AdminDashboard() {
     if (modeFilteredResponses.length === 0) {
       return { totalEmissions: 0, averageEmissions: 0 };
     }
-    const emissionKey = modeConfig[dashboardMode].emissionKey;
     const totalEmissions = modeFilteredResponses.reduce((sum, response) => {
-      const emissionValue = response[emissionKey] as (string | number | null | undefined);
-      const emission = parseFloat(String(emissionValue) || '0');
+      let emission = 0;
+      switch (dashboardMode) {
+        case 'Feed':
+          emission = parseFloat(response.feed_emission?.toString() || '0');
+          break;
+        case 'Manure':
+          emission = parseFloat(response.manure_emission?.toString() || '0');
+          break;
+        case 'Energy':
+          emission = parseFloat(response.energy_emission?.toString() || '0');
+          break;
+        case 'Waste':
+          emission = parseFloat(response.waste_emission?.toString() || '0');
+          break;
+        case 'Transport':
+          emission = parseFloat(response.transport_emission?.toString() || '0');
+          break;
+      }
       return sum + (isNaN(emission) ? 0 : emission);
     }, 0);
 
     const averageEmissions = totalEmissions > 0 ? totalEmissions / modeFilteredResponses.length : 0;
+
     return {
       totalEmissions: Math.round(totalEmissions * 100) / 100,
       averageEmissions: Math.round(averageEmissions * 100) / 100
@@ -179,16 +204,18 @@ export default function AdminDashboard() {
   };
   const currentStats = calculateStats();
 
+  // --- CHANGE START: Removed localStorage.setItem from the handleAuth function ---
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault()
     if (password === 'admin123') {
       setIsAuthenticated(true)
-      localStorage.setItem('isAdminAuthenticated', 'true');
+      // localStorage.setItem('isAdminAuthenticated', 'true'); // This line has been removed
       setAuthError('')
     } else {
       setAuthError('Invalid password')
     }
   }
+  // --- CHANGE END ---
 
   const fetchResponses = async () => {
     setLoading(true);
@@ -244,6 +271,16 @@ export default function AdminDashboard() {
     }
   }
 
+  // --- CHANGE START: The useEffect that checked localStorage has been removed ---
+  // The following block has been deleted:
+  // useEffect(() => {
+  //   const isAdmin = localStorage.getItem('isAdminAuthenticated') === 'true';
+  //   if(isAdmin) {
+  //     setIsAuthenticated(true);
+  //   }
+  // }, []);
+  // --- CHANGE END ---
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchResponses();
@@ -260,6 +297,7 @@ export default function AdminDashboard() {
       'Manure Emission': r.manure_emission || 0,
       'Energy Emission': r.energy_emission || 0,
       'Waste Emission': r.waste_emission || 0,
+      'Transport Emission': r.transport_emission || 0,
       Username: r.user_email || '',
       Organization: r.organization_name || '',
       Date: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
@@ -391,12 +429,14 @@ export default function AdminDashboard() {
           <motion.button onClick={exportData} className="bg-green-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-all" >
             <Download className="w-4 h-4" /> Export Excel
           </motion.button>
+          {/* --- CHANGE START: The logout button no longer needs to remove the localStorage item --- */}
           <motion.button onClick={() => {
             setIsAuthenticated(false);
-            localStorage.removeItem('isAdminAuthenticated');
+            // localStorage.removeItem('isAdminAuthenticated'); // This line has been removed
           }} className="bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-all" >
             <LogOut className="w-4 h-4" /> Logout
           </motion.button>
+          {/* --- CHANGE END --- */}
         </div>
       </motion.div>
 
@@ -436,18 +476,18 @@ export default function AdminDashboard() {
               placeholder="Search organizations..."
               value={orgSearchTerm}
               onChange={(e) => setOrgSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-grey-800"
             />
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
+            <button onClick={() => setSelectedOrg('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-grey-800 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}> All Organizations ({responses.length}) </button>
             {filteredOrganizations.map(org => (
               <button
                 key={org}
                 onContextMenu={(e) => handleRightClick(e, org)}
                 onClick={() => setSelectedOrg(org)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === org ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedOrg === 'all' ? 'bg-gray-800 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20 focus:ring-grey-800'}`}
               >
                 {org} ({orgCounts[org] || 0})
               </button>
