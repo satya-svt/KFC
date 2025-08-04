@@ -243,12 +243,12 @@ export default function GeneralForm() {
                             <p className="text-gray-200 text-sm">(from above considered time)</p>
                         </div>
                         <div className="text-center">
-                            <h3 className="text-lg font-semibold text-white mb-2">KFC share of wallet</h3>
-                            <p className="text-gray-200 text-sm">(in %)</p>
-                        </div>
-                        <div className="text-center">
                             <h3 className="text-lg font-semibold text-white mb-2">Count of birds</h3>
                             <p className="text-gray-200 text-sm">(raised for processing)</p>
+                        </div>
+                            <div className="text-center">
+                            <h3 className="text-lg font-semibold text-white mb-2">KFC share of wallet</h3>
+                            <p className="text-gray-200 text-sm">(in %)</p>
                         </div>
                     </div>
 
@@ -279,18 +279,7 @@ export default function GeneralForm() {
                                         </div>
                                     </div>
 
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            value={row.kfc_share}
-                                            onChange={(e) => updateGeneralRow(index, 'kfc_share', e.target.value)}
-                                            className="w-full pl-4 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg"
-                                            placeholder="Enter %"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="relative">
+                                   <div className="relative">
                                         <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                         <input
                                             type="number"
@@ -298,6 +287,17 @@ export default function GeneralForm() {
                                             onChange={(e) => updateGeneralRow(index, 'bird_count', e.target.value)}
                                             className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg"
                                             placeholder="Enter count"
+                                            required
+                                        />
+                                    </div>
+
+                                     <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={row.kfc_share}
+                                            onChange={(e) => updateGeneralRow(index, 'kfc_share', e.target.value)}
+                                            className="w-full pl-4 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg"
+                                            placeholder="Enter %"
                                             required
                                         />
                                     </div>

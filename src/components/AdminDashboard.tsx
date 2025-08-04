@@ -490,10 +490,7 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-300">Total {dashboardMode} Records</p>
           <p className="text-3xl font-bold">{summaryStats.totalRecords}</p>
         </div>
-        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Unique {dashboardMode} Types</p>
-          <p className="text-3xl font-bold">{Object.keys(summaryStats.responsesByCategory).length}</p>
-        </div>
+     
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <p className="text-sm text-gray-300">Most Common {dashboardMode} Type</p>
           <p className="text-3xl font-bold">{summaryStats.mostCommonType}</p>
