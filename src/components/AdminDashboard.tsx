@@ -310,31 +310,76 @@ export default function AdminDashboard() {
 
   const summaryStats = useMemo(() => {
     const totalRecords = modeFilteredResponses.length;
-    const responsesByCategory = modeFilteredResponses.reduce((acc, response) => {
+
+    // Group responses by emission values instead of just counting occurrences
+    const emissionKey = modeConfig[dashboardMode].emissionKey;
+    const responsesByEmission = modeFilteredResponses.reduce((acc, response) => {
+      const emissionValue = response[emissionKey] as (string | number | null | undefined);
+      const emission = emissionValue !== undefined && emissionValue !== null ? parseFloat(String(emissionValue)) : 0;
+
       const key = response.name || 'Unknown';
-      acc[key] = (acc[key] || 0) + 1;
+      if (!acc[key]) {
+        acc[key] = 0;
+      }
+      acc[key] += emission;
       return acc;
     }, {} as Record<string, number>);
 
+    const mostCommonType = Object.entries(responsesByEmission).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
-    const mostCommonType = Object.entries(responsesByCategory).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-
-    return { totalRecords, mostCommonType, responsesByCategory };
+    return { totalRecords, mostCommonType, responsesByCategory: responsesByEmission };
   }, [modeFilteredResponses]);
 
   const chartData = useMemo(() => {
+    const totalEmissions = Object.values(summaryStats.responsesByCategory).reduce((sum, val) => sum + val, 0);
+
     return Object.entries(summaryStats.responsesByCategory).map(([name, value]) => ({
       name,
       value,
-      percentage: summaryStats.totalRecords > 0 ? Math.round((value / summaryStats.totalRecords) * 100) : 0
+      percentage: totalEmissions > 0 ? Math.round((value / totalEmissions) * 100) : 0
     }));
   }, [summaryStats]);
 
   const orgCounts = useMemo(() => {
-    return responses.reduce((acc, response) => {
-      if (response.organization_name) {
-        acc[response.organization_name] = (acc[response.organization_name] || 0) + 1;
+    // Count complete form cycles per organization
+    // A complete cycle means having at least one entry from each form category
+    const orgFormCounts = responses.reduce((acc, response) => {
+      if (response.organization_name && response.user_email) {
+        const orgKey = response.organization_name;
+        const userKey = response.user_email;
+
+        if (!acc[orgKey]) {
+          acc[orgKey] = {};
+        }
+        if (!acc[orgKey][userKey]) {
+          acc[orgKey][userKey] = new Set();
+        }
+
+        // Map categories to form types
+        let formType = response.category;
+        if (response.category === 'energy_processing') {
+          formType = 'energy';
+        }
+
+        acc[orgKey][userKey].add(formType);
       }
+      return acc;
+    }, {} as Record<string, Record<string, Set<string>>>);
+
+    // Count complete cycles (users who have completed all required forms)
+    const requiredForms = ['general', 'feed', 'manure', 'energy', 'waste', 'transport'];
+
+    return Object.entries(orgFormCounts).reduce((acc, [orgName, users]) => {
+      let completeCycles = 0;
+
+      Object.values(users).forEach(userForms => {
+        const hasAllForms = requiredForms.every(form => userForms.has(form));
+        if (hasAllForms) {
+          completeCycles++;
+        }
+      });
+
+      acc[orgName] = completeCycles;
       return acc;
     }, {} as Record<string, number>);
   }, [responses]);
@@ -570,7 +615,6 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* --- raw data--- */}
         {showRawData && (
           <motion.div className="overflow-x-auto border border-white/10 rounded-lg backdrop-blur-lg" >
             <table className="min-w-full text-left text-sm text-gray-300">
