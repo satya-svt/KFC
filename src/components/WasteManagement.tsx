@@ -288,7 +288,7 @@ export default function WasteManagement() {
               {wasteRows.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
                   {rowIndex > 0 && (
-                    <div className="h-0.5 w-full my-2 bg-gray-300 rounded-lg" />
+                    <div className="h-1 w-full my-2 bg-gray-300 rounded-lg" />
                   )}
                   <table className="w-full mb-2">
                     <tbody>

@@ -260,12 +260,15 @@ export default function Transport() {
 
           <motion.div
             className="bg-white border border-gray-300 rounded-lg overflow-hidden relative"
+             initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
           >
             <div className="overflow-x-auto pb-20">
               {transportRows.map((row, rowIndex) => (
                 <React.Fragment key={rowIndex}>
                   {rowIndex > 0 && (
-                    <div className="h-px w-full my-2 bg-gray-200" />
+                    <div className="h-1 w-full my-2 bg-gray-300 rounded-lg" />
                   )}
                   <table className="w-full mb-2">
                     <tbody>
