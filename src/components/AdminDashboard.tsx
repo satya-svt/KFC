@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx'
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
-type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste' | 'Transport';
+type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste' | 'Transport' | 'Overall';
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -103,6 +103,18 @@ export default function AdminDashboard() {
         statSubText: 'text-purple-200',
         badge: 'px-2 py-1 rounded-full text-xs bg-purple-900/20 text-purple-400 border border-purple-500/20'
       }
+    },
+    'Overall': {
+      icon: BarChart3,
+      emissionKey: 'feed_emission', // This will be overridden in the data processing
+      categoryNames: ['general', 'feed', 'manure', 'energy_processing', 'waste', 'transport'],
+      theme: {
+        icon: 'text-blue-400',
+        statCard: 'bg-gradient-to-r from-blue-600/20 to-blue-800/20 border border-blue-500/20',
+        statText: 'text-blue-300',
+        statSubText: 'text-blue-200',
+        badge: 'px-2 py-1 rounded-full text-xs bg-blue-900/20 text-blue-400 border border-blue-500/20'
+      }
     }
   };
   const CurrentIcon = modeConfig[dashboardMode].icon;
@@ -190,6 +202,15 @@ export default function AdminDashboard() {
           break;
         case 'Transport':
           emission = parseFloat(response.transport_emission?.toString() || '0');
+          break;
+        case 'Overall':
+          // Calculate total emissions from all categories for this response
+          const feedEmission = parseFloat(response.feed_emission?.toString() || '0');
+          const manureEmission = parseFloat(response.manure_emission?.toString() || '0');
+          const energyEmission = parseFloat(response.energy_emission?.toString() || '0');
+          const wasteEmission = parseFloat(response.waste_emission?.toString() || '0');
+          const transportEmission = parseFloat(response.transport_emission?.toString() || '0');
+          emission = feedEmission + manureEmission + energyEmission + wasteEmission + transportEmission;
           break;
       }
       return sum + (isNaN(emission) ? 0 : emission);
@@ -289,19 +310,37 @@ export default function AdminDashboard() {
   }, [isAuthenticated]);
 
   const exportData = () => {
-    const dataToExport = orgFilteredResponses.map(r => ({
-      Name: r.name,
-      Description: r.description || '',
-      Category: r.category,
-      'Feed Emission': r.feed_emission || 0,
-      'Manure Emission': r.manure_emission || 0,
-      'Energy Emission': r.energy_emission || 0,
-      'Waste Emission': r.waste_emission || 0,
-      'Transport Emission': r.transport_emission || 0,
-      Username: r.user_email || '',
-      Organization: r.organization_name || '',
-      Date: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
-    }));
+    const dataToExport = orgFilteredResponses.map(r => {
+      const baseData = {
+        Name: r.name,
+        Description: r.description || '',
+        Category: r.category,
+        'Feed Emission': r.feed_emission || 0,
+        'Manure Emission': r.manure_emission || 0,
+        'Energy Emission': r.energy_emission || 0,
+        'Waste Emission': r.waste_emission || 0,
+        'Transport Emission': r.transport_emission || 0,
+        Username: r.user_email || '',
+        Organization: r.organization_name || '',
+        Date: r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+      };
+
+      if (dashboardMode === 'Overall') {
+        // Add total emission column for Overall mode
+        const totalEmission = parseFloat(r.feed_emission?.toString() || '0') + 
+                             parseFloat(r.manure_emission?.toString() || '0') + 
+                             parseFloat(r.energy_emission?.toString() || '0') + 
+                             parseFloat(r.waste_emission?.toString() || '0') + 
+                             parseFloat(r.transport_emission?.toString() || '0');
+        return {
+          ...baseData,
+          'Total Emission': totalEmission
+        };
+      }
+
+      return baseData;
+    });
+    
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Export");
@@ -314,8 +353,20 @@ export default function AdminDashboard() {
     // Group responses by emission values instead of just counting occurrences
     const emissionKey = modeConfig[dashboardMode].emissionKey;
     const responsesByEmission = modeFilteredResponses.reduce((acc, response) => {
-      const emissionValue = response[emissionKey] as (string | number | null | undefined);
-      const emission = emissionValue !== undefined && emissionValue !== null ? parseFloat(String(emissionValue)) : 0;
+      let emission = 0;
+      
+      if (dashboardMode === 'Overall') {
+        // Calculate total emissions from all categories for this response
+        const feedEmission = parseFloat(response.feed_emission?.toString() || '0');
+        const manureEmission = parseFloat(response.manure_emission?.toString() || '0');
+        const energyEmission = parseFloat(response.energy_emission?.toString() || '0');
+        const wasteEmission = parseFloat(response.waste_emission?.toString() || '0');
+        const transportEmission = parseFloat(response.transport_emission?.toString() || '0');
+        emission = feedEmission + manureEmission + energyEmission + wasteEmission + transportEmission;
+      } else {
+        const emissionValue = response[emissionKey] as (string | number | null | undefined);
+        emission = emissionValue !== undefined && emissionValue !== null ? parseFloat(String(emissionValue)) : 0;
+      }
 
       const key = response.name || 'Unknown';
       if (!acc[key]) {
@@ -328,7 +379,7 @@ export default function AdminDashboard() {
     const mostCommonType = Object.entries(responsesByEmission).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
     return { totalRecords, mostCommonType, responsesByCategory: responsesByEmission };
-  }, [modeFilteredResponses]);
+  }, [modeFilteredResponses, dashboardMode]);
 
   const chartData = useMemo(() => {
     const totalEmissions = Object.values(summaryStats.responsesByCategory).reduce((sum, val) => sum + val, 0);
@@ -627,8 +678,21 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {modeFilteredResponses.map((r) => {
-                  const emissionKey = modeConfig[dashboardMode].emissionKey;
-                  const emissionValue = r[emissionKey] as (string | number | null | undefined);
+                  let emissionValue: number;
+                  
+                  if (dashboardMode === 'Overall') {
+                    // Calculate total emissions from all categories for this response
+                    const feedEmission = parseFloat(r.feed_emission?.toString() || '0');
+                    const manureEmission = parseFloat(r.manure_emission?.toString() || '0');
+                    const energyEmission = parseFloat(r.energy_emission?.toString() || '0');
+                    const wasteEmission = parseFloat(r.waste_emission?.toString() || '0');
+                    const transportEmission = parseFloat(r.transport_emission?.toString() || '0');
+                    emissionValue = feedEmission + manureEmission + energyEmission + wasteEmission + transportEmission;
+                  } else {
+                    const emissionKey = modeConfig[dashboardMode].emissionKey;
+                    const emissionValueRaw = r[emissionKey] as (string | number | null | undefined);
+                    emissionValue = emissionValueRaw !== undefined && emissionValueRaw !== null ? parseFloat(String(emissionValueRaw)) : 0;
+                  }
 
                   const value = r.value ?? 'N/A';
                   let unit = '';
@@ -644,7 +708,7 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-gray-300">{unit || 'N/A'}</td>
                       <td className="px-6 py-4">
                         <span className={currentTheme.badge}>
-                          {emissionValue !== undefined && emissionValue !== null ? parseFloat(String(emissionValue)).toFixed(4) : '0.0000'}
+                          {emissionValue.toFixed(4)}
                         </span>
                       </td>
                       <td className="px-6 py-4">{r.organization_name ? (<span className="px-2 py-1 rounded-full text-xs bg-blue-900/20 text-blue-400 border border-blue-500/20"> {r.organization_name} </span>) : (<span className="text-gray-500">-</span>)}</td>
