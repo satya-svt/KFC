@@ -122,7 +122,9 @@ export default function AdminDashboard() {
 
   const fetchOrganizations = async () => {
     const { data, error } = await supabase.from('organizations').select('name').order('name');
-    if (data) {
+    if (error) {
+      console.error("Error fetching organizations:", error);
+    } else if (data) {
       setOrganizations(data.map(o => o.name));
     }
   };
@@ -147,8 +149,9 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteOrganization = async (orgName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${orgName}"? This will delete the organization, all of its users, and all of their data. This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to delete "${orgName}"? This will delete all data associated with this organization. This action cannot be undone.`)) {
       setContextMenu(null);
+      
       const { error } = await supabase.rpc('delete_organization', { org_name: orgName });
       if (error) {
         alert(`Error deleting organization: ${error.message}`);
@@ -253,15 +256,17 @@ export default function AdminDashboard() {
         return;
       }
 
+      // Get user IDs from data rows
       const userIds = Array.from(new Set(dataRows.map(row => row.user_id).filter(Boolean))) as string[];
-
+      
+      // Fetch profiles to get organization names
       let profilesMap: Map<string, string> = new Map();
       if (userIds.length > 0) {
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, organization_name')
           .in('id', userIds);
-
+        
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
         } else if (profiles) {
@@ -273,14 +278,11 @@ export default function AdminDashboard() {
         }
       }
 
+      // Enrich responses with organization names from profiles
       const enrichedResponses = dataRows.map(row => {
         const profileOrgName = profilesMap.get(row.user_id || '');
         const finalOrgName = profileOrgName || row.organization_name || null;
-
-        return {
-          ...row,
-          organization_name: finalOrgName
-        } as ResponseData;
+        return { ...row, organization_name: finalOrgName } as ResponseData;
       });
 
       setResponses(enrichedResponses);

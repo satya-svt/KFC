@@ -151,21 +151,25 @@ export default function ReviewDownload() {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user) {
-          // Fetch profile data including organization_name
-          const { data: profile, error } = await supabase
-            .from('profiles')
+          // Since profiles table doesn't exist, we'll get organization_name from data_rows
+          // Find the most recent entry for this user to get their organization
+          const { data: userData, error } = await supabase
+            .from('data_rows')
             .select('organization_name')
-            .eq('id', user.id)
+            .eq('user_id', user.id)
+            .not('organization_name', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .single()
 
           if (error) {
-            console.error('Error fetching profile:', error)
+            console.error('Error fetching user data:', error)
           }
 
           setAllData(data)
           setUserInfo({
             email,
-            profile: profile || null
+            profile: userData ? { organization_name: userData.organization_name } : null
           })
         }
       } catch (error) {

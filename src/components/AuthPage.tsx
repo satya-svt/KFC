@@ -61,7 +61,7 @@ export default function AuthPage() {
       if (error) {
         console.error("Error fetching organizations:", error);
       } else if (data) {
-        setOrganizationOptions(data.map(org => org.name));
+        setOrganizationOptions(data.map(o => o.name));
       }
     };
     fetchOrganizations();
