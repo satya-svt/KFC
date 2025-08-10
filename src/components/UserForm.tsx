@@ -328,7 +328,7 @@ export default function UserForm() {
                         } rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100`}
                       required={index === 0}
                     >
-                      <option value="" className="text-gray-500">{index === 0 ? "Select feed type" : "Select feed type (optional)"}</option>
+                      <option value="" className="text-gray-500">{index === 0 ? "Select feed type" : "Select feed type"}</option>
                       {feedOptions.map(option => (
                         <option key={option} value={option} className="text-gray-800">{option}</option>
                       ))}
@@ -345,7 +345,7 @@ export default function UserForm() {
                         } rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all appearance-none cursor-pointer hover:bg-gray-100`}
                       required={index === 0}
                     >
-                      <option value="" className="text-gray-500">{index === 0 ? "Select unit" : "Select unit (optional)"}</option>
+                      <option value="" className="text-gray-500">{index === 0 ? "Select unit" : "Select unit"}</option>
                       {unitOptions.map(unit => (
                         <option key={unit} value={unit} className="text-gray-800">{unit}</option>
                       ))}
@@ -360,7 +360,7 @@ export default function UserForm() {
                       onChange={(e) => updateFeedRow(index, 'quantity', e.target.value)}
                       className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${row.quantity ? 'border-gray-400' : 'border-gray-300'
                         } rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all hover:bg-gray-100`}
-                      placeholder={index === 0 ? "0000" : "Enter quantity (optional)"}
+                      placeholder={index === 0 ? "0000" : "Enter quantity"}
                       min="0"
                       step="any"
                       required={index === 0}

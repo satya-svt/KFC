@@ -240,7 +240,7 @@ export default function GeneralForm() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                         <div className="text-center">
                             <h3 className="text-lg font-semibold text-white mb-2">Processed Poultry Supplied</h3>
-                            <p className="text-gray-200 text-sm">(from above considered time)</p>
+                            <p className="text-gray-200 text-sm">(for financial year 2024-2025)</p>
                         </div>
                         <div className="text-center">
                             <h3 className="text-lg font-semibold text-white mb-2">Count of birds</h3>

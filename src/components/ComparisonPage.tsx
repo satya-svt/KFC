@@ -2,10 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase, ResponseData } from '../lib/supabase';
-// --- CHANGE START: Import LineChart, Line, and CartesianGrid instead of BarChart ---
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-// --- CHANGE END ---
-import { ArrowLeft, Users } from 'lucide-react';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { ArrowLeft, Users, Flame, Droplets, Zap, Truck } from 'lucide-react';
 
 export default function ComparisonPage() {
     const navigate = useNavigate();
@@ -16,27 +14,39 @@ export default function ComparisonPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // --- FIX: This check now correctly redirects to the auth page if the user is not authenticated ---
-        const checkAdminAuth = () => {
-            const isAdmin = localStorage.getItem('isAdminAuthenticated') === 'true';
-            if (!isAdmin) {
-                navigate('/auth');
-            }
-        };
-        checkAdminAuth();
-    }, [navigate]);
-
-    useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const { data: orgData, error: orgError } = await supabase.from('organizations').select('name').order('name');
-            if (orgData) setOrganizations(orgData.map(o => o.name));
 
-            const { data: allResponses, error: responsesError } = await supabase.from('data_rows').select('*');
-            if (allResponses) setData(allResponses);
+            // Fetch organizations
+            const { data: orgData, error: orgError } = await supabase
+                .from('organizations')
+                .select('name')
+                .order('name');
+
+            if (orgError) {
+                console.error('Error fetching organizations:', orgError.message);
+            } else if (orgData) {
+                setOrganizations(orgData.map(o => o.name));
+            }
+
+            // Fetch emissions data (similar to ReviewDownload)
+            const { data: allResponses, error: responsesError } = await supabase
+                .from('data_rows')
+                .select('*');
+
+            if (responsesError) {
+                console.error('Error fetching responses:', responsesError.message);
+            } else if (allResponses) {
+                setData(allResponses);
+            }
 
             setLoading(false);
+
+            console.log('orgData sample:', orgData?.slice(0, 10));
+            console.log('allResponses sample:', allResponses?.slice(0, 10));
+            console.log('organizations (from table):', orgData?.map(o => o.name));
         };
+
         fetchData();
     }, []);
 
@@ -52,15 +62,72 @@ export default function ComparisonPage() {
                 .reduce((sum, row) => sum + (parseFloat(String(row[key])) || 0), 0);
         };
 
-        return categories.map((category, index) => ({
+        const calculateOverallEmissions = (orgName: string) => {
+            return data
+                .filter(row => row.organization_name === orgName)
+                .reduce((sum, row) => {
+                    const feedEmission = parseFloat(String(row.feed_emission)) || 0;
+                    const manureEmission = parseFloat(String(row.manure_emission)) || 0;
+                    const energyEmission = parseFloat(String(row.energy_emission)) || 0;
+                    const wasteEmission = parseFloat(String(row.waste_emission)) || 0;
+                    const transportEmission = parseFloat(String(row.transport_emission)) || 0;
+                    return sum + feedEmission + manureEmission + energyEmission + wasteEmission + transportEmission;
+                }, 0);
+        };
+
+        const categoryData = categories.map((category, index) => ({
             name: category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
             [orgA]: calculateTotalEmissions(orgA, category, emissionKeys[index]),
             [orgB]: calculateTotalEmissions(orgB, category, emissionKeys[index]),
         }));
+
+        categoryData.unshift({
+            name: 'Overall',
+            [orgA]: calculateOverallEmissions(orgA),
+            [orgB]: calculateOverallEmissions(orgB),
+        });
+
+        return categoryData;
     }, [orgA, orgB, data]);
 
+    const getCategoryData = (categoryName: string) => {
+        if (!orgA || !orgB) return [];
+        
+        const categoryData = comparisonData.find(item => item.name === categoryName);
+        if (!categoryData) return [];
+
+        return [
+            { name: orgA, value: categoryData[orgA] || 0 },
+            { name: orgB, value: categoryData[orgB] || 0 }
+        ];
+    };
+
+    const getCategoryIcon = (categoryName: string) => {
+        switch (categoryName.toLowerCase()) {
+            case 'overall': return Users;
+            case 'feed': return Flame;
+            case 'manure': return Droplets;
+            case 'energy processing': return Zap;
+            case 'waste': return Droplets;
+            case 'transport': return Truck;
+            default: return Users;
+        }
+    };
+
+    const getCategoryColor = (categoryName: string) => {
+        switch (categoryName.toLowerCase()) {
+            case 'overall': return 'text-blue-400';
+            case 'feed': return 'text-orange-400';
+            case 'manure': return 'text-green-400';
+            case 'energy processing': return 'text-yellow-400';
+            case 'waste': return 'text-cyan-400';
+            case 'transport': return 'text-purple-400';
+            default: return 'text-blue-400';
+        }
+    };
+
     return (
-        <motion.div className="min-h-screen bg-gray-900 p-6 text-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-6 text-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <Users size={28} />
@@ -82,56 +149,69 @@ export default function ComparisonPage() {
                 </select>
             </div>
 
-            {orgA && orgB ? (
-                <div className="bg-white/10 p-6 rounded-lg">
-                    <h2 className="text-xl font-semibold mb-4">Total Emissions by Category (in Tons)</h2>
-
-                    {/* --- CHANGE START: Added SVG filter definitions for the glowing line effect --- */}
-                    <svg width="0" height="0">
-                        <defs>
-                            <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
-                                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#a855f7" />
-                            </filter>
-                            <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
-                                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#22c55e" />
-                            </filter>
-                        </defs>
-                    </svg>
-                    {/* --- CHANGE END --- */}
-
-                    <ResponsiveContainer width="100%" height={400}>
-                        {/* --- CHANGE START: Replaced BarChart with LineChart and styled the lines --- */}
-                        <LineChart data={comparisonData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                            <XAxis dataKey="name" stroke="#9CA3AF" />
-                            <YAxis stroke="#9CA3AF" />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563', borderRadius: '0.5rem' }}
-                                itemStyle={{ color: '#E5E7EB' }}
-                                labelStyle={{ color: '#9CA3AF', fontWeight: 'bold' }}
-                            />
-                            <Legend />
-                            <Line
-                                type="monotone"
-                                dataKey={orgA}
-                                stroke="#a855f7" // Purple
-                                strokeWidth={3}
-                                filter="url(#glow-purple)"
-                                activeDot={{ r: 8, strokeWidth: 2, fill: '#c084fc' }}
-                                dot={{ r: 4, strokeWidth: 2 }}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey={orgB}
-                                stroke="#22c55e" // Green
-                                strokeWidth={3}
-                                filter="url(#glow-green)"
-                                activeDot={{ r: 8, strokeWidth: 2, fill: '#4ade80' }}
-                                dot={{ r: 4, strokeWidth: 2 }}
-                            />
-                        </LineChart>
-                        {/* --- CHANGE END --- */}
-                    </ResponsiveContainer>
+            {loading ? (
+                <div className="text-center py-20">
+                    <p className="text-gray-400">Loading data...</p>
+                </div>
+            ) : orgA && orgB ? (
+                <div className="space-y-8">
+                    {['Overall', 'Feed', 'Manure', 'Energy Processing', 'Waste', 'Transport'].map((category) => {
+                        const IconComponent = getCategoryIcon(category);
+                        const categoryColor = getCategoryColor(category);
+                        const chartData = getCategoryData(category);
+                        
+                        return (
+                            <motion.div 
+                                key={category} 
+                                className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <div className="flex items-center gap-3 mb-4">
+                                    <IconComponent className={`w-6 h-6 ${categoryColor}`} />
+                                    <h2 className="text-xl font-semibold">{category} Emissions Comparison</h2>
+                                </div>
+                                
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+                                        <XAxis dataKey="name" stroke="#9CA3AF" />
+                                        <YAxis stroke="#9CA3AF" />
+                                        <Tooltip 
+                                            contentStyle={{ 
+                                                backgroundColor: '#1F2937', 
+                                                border: '1px solid #4B5563',
+                                                borderRadius: '0.5rem'
+                                            }}
+                                            labelStyle={{ color: '#9CA3AF' }}
+                                        />
+                                        <Bar 
+                                            dataKey="value" 
+                                            fill={category === 'Overall' ? '#3B82F6' : 
+                                                  category === 'Feed' ? '#F97316' :
+                                                  category === 'Manure' ? '#22C55E' :
+                                                  category === 'Energy Processing' ? '#EAB308' :
+                                                  category === 'Waste' ? '#06B6D4' :
+                                                  '#A855F7'}
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                                
+                                <div className="mt-4 grid grid-cols-2 gap-4">
+                                    <div className="text-center">
+                                        <p className="text-sm text-gray-400">{orgA}</p>
+                                        <p className="text-2xl font-bold">{chartData[0]?.value.toFixed(4) || '0.0000'}</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-sm text-gray-400">{orgB}</p>
+                                        <p className="text-2xl font-bold">{chartData[1]?.value.toFixed(4) || '0.0000'}</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="text-center py-20">

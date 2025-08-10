@@ -118,10 +118,10 @@ export default function EnergyProcessing() {
       row.energyType && row.unit && row.consumption
     )
 
-  const isFormValid =
-    hasValidRowForFacility('Hatchery Plant') &&
-    hasValidRowForFacility('Processing Plant') &&
-    hasValidRowForFacility('Farm')
+    const isFormValid = energyRows.length > 0 && energyRows.every(row =>
+      row.energyType && row.unit && row.consumption
+    )
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -345,6 +345,21 @@ export default function EnergyProcessing() {
             <motion.div className="flex items-center space-x-2 text-red-800 bg-red-100 border border-red-300 rounded-lg p-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{errorMessage}</span>
+            </motion.div>
+          )}
+               {isFormValid && (
+            <motion.div
+              className="bg-white border border-gray-300 rounded-lg p-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-green-800" />
+                <h4 className="text-green-800 font-medium">Ready to Submit</h4>
+              </div>
+              <p className="text-gray-800 text-sm">
+                All required fields are filled.
+              </p>
             </motion.div>
           )}
 
