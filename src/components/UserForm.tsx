@@ -52,7 +52,7 @@ export default function UserForm() {
 
   React.useEffect(() => {
     const loadUserProfileAndAutoSave = async () => {
-      const profile = getUserProfile()
+      const profile = await getUserProfile()
       setUserProfile(profile)
       try {
         const savedData = await loadAutoSavedData('feed', entryId)
