@@ -53,7 +53,7 @@ export default function WasteManagement() {
 
   React.useEffect(() => {
     const loadUserProfile = async () => {
-      const profile = getUserProfile()
+      const profile = await getUserProfile()
       setUserProfile(profile)
 
       try {
@@ -141,7 +141,7 @@ export default function WasteManagement() {
       const userEmail = await getCurrentUserEmail();
       if (!userEmail) throw new Error('User email not found.');
 
-      const userProfile = getUserProfile();
+      const userProfile = await getUserProfile();
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) { // Check for both error and null user
