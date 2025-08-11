@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,6 +32,11 @@ export default function AdminDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, org: string } | null>(null);
+
+  const supabaseAdmin = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY // ⚠️ Service role key, only for testing
+  );
 
   const modeConfig: Record<DashboardMode, {
     icon: React.ElementType;
@@ -148,19 +154,44 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteOrganization = async (orgName: string) => {
+  const handleDeleteOrganization = async (orgName: string) => { 
     if (window.confirm(`Are you sure you want to delete "${orgName}"? This will delete all data associated with this organization. This action cannot be undone.`)) {
       setContextMenu(null);
-      
-      const { error } = await supabase.rpc('delete_organization', { org_name: orgName });
-      if (error) {
-        alert(`Error deleting organization: ${error.message}`);
-      } else {
-        fetchOrganizations();
-        fetchResponses();
+  
+      try {
+        // 🔹 NEW: Get all user IDs in this organization
+        const { data: users, error: usersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('organization_name', orgName);
+  
+        if (usersError) throw usersError;
+  
+        // 🔹 NEW: Delete each user from Supabase Auth using service role key
+        for (const user of users || []) {
+          const { error: delError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+          if (delError) {
+            console.error(`Error deleting user ${user.id}:`, delError.message);
+          }
+        }
+  
+        // 🔹 Existing: Call RPC to delete org data
+        const { error } = await supabase.rpc('delete_organization', { org_name: orgName });
+        if (error) {
+          alert(`Error deleting organization: ${error.message}`);
+        } else {
+          fetchOrganizations();
+          fetchResponses();
+          alert(`Organization "${orgName}" deleted successfully.`);
+        }
+      } catch (err) {
+        const error = err as Error; // ✅ Typecast for TypeScript safety
+        console.error('Error deleting organization:', error);
+        alert(`Error deleting organization: ${error.message || error}`);
       }
     }
   };
+  
 
   const handleRightClick = (e: React.MouseEvent, org: string) => {
     e.preventDefault();
