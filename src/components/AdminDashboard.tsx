@@ -569,17 +569,7 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" >
-        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Total {dashboardMode} Records</p>
-          <p className="text-3xl font-bold">{summaryStats.totalRecords}</p>
-        </div>
-     
-        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-          <p className="text-sm text-gray-300">Most Common {dashboardMode} Type</p>
-          <p className="text-3xl font-bold">{summaryStats.mostCommonType}</p>
-        </div>
-      </motion.div>
+   
 
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
