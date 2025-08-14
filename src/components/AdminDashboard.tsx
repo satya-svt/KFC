@@ -11,10 +11,17 @@ import {
   Download, Eye, EyeOff, LogOut, Calculator, BarChart3, ArrowLeft, Lock, ChevronDown, Flame, Droplets, Zap, Search, PlusCircle, Users, Trash2, Truck
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { useLocation } from 'react-router-dom';
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
 type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste' | 'Transport' | 'Overall';
+
+type LocationState = {
+  fromAdmin?: boolean;
+  fromCompare?: boolean;
+};
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -32,6 +39,10 @@ export default function AdminDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, org: string } | null>(null);
+
+  const location = useLocation();
+  const fromAdmin = (location.state as LocationState | null)?.fromAdmin;
+
 
   const supabaseAdmin = createClient(
     import.meta.env.VITE_SUPABASE_URL,
@@ -197,6 +208,15 @@ export default function AdminDashboard() {
     e.preventDefault();
     setContextMenu({ x: e.pageX, y: e.pageY, org });
   };
+
+  useEffect(() => {
+    const state = location.state as LocationState | null;
+    if (state?.fromCompare || state?.fromAdmin) {
+      setIsAuthenticated(true);
+    }
+  }, [location.state]);
+  
+ 
 
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
@@ -570,7 +590,6 @@ export default function AdminDashboard() {
       </motion.div>
 
    
-
       <motion.div className="mb-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <div className="flex justify-between items-center mb-4">
@@ -579,7 +598,11 @@ export default function AdminDashboard() {
               <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 text-sm bg-blue-600/50 hover:bg-blue-600/80 px-3 py-1.5 rounded-lg">
                 <PlusCircle size={16} /> Add
               </button>
-              <button onClick={() => navigate('/compare')} className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg">
+              <button
+  onClick={() => navigate('/compare', { state: { fromAdmin: true } })}
+  className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg"
+>
+
                 <Users size={16} /> Compare
               </button>
             </div>

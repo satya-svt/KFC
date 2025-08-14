@@ -209,9 +209,13 @@ export default function ComparisonPage() {
                     <Users size={28} />
                     <h1 className="text-3xl font-bold">Organization Comparison</h1>
                 </div>
-                <motion.button onClick={() => navigate('/admin')} className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
-                    <ArrowLeft />
-                </motion.button>
+                <motion.button
+  onClick={() => navigate('/admin', { state: { fromAdmin: true } })}
+  className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg"
+>
+  <ArrowLeft />
+</motion.button>
+
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
