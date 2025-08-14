@@ -21,7 +21,7 @@ const HeroSection: React.FC = () => {
             <div className="relative z-10 text-center text-white max-w-4xl px-6 font-script"> {/* Apply script font to parent */}
 
                 {/* Top two lines grouped together with small spacing */}
-                <div className="mb-10"> {/* Increased margin-bottom for a larger gap */}
+                <div className="mb-20"> {/* Increased margin-bottom for a larger gap */}
                     <p className="text-3xl md:text-4xl font-medium mb-2"> {/* Adjusted size and spacing */}
                         90% of Global Chicken Meat is BROILER
                     </p>

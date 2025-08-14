@@ -30,13 +30,13 @@ const Footer: React.FC = () => {
                             <div className="flex items-center gap-3">
                                 <Mail size={18} className="text-red-400" />
                                 <a href="mailto:sandeep.pathuri25@gmail.com" className="text-gray-300 hover:text-white transition-colors duration-300">
-                                    sandeep.pathuri25@gmail.com
+                                   
                                 </a>
                             </div>
                             {/* Corrected 'items-right' to 'items-center' */}
                             <div className="flex items-center gap-3">
                                 <Users size={18} className="text-red-400" />
-                                <span className="text-gray-300">+91 88856 62977</span>
+                              
                             </div>
                             {/* Corrected 'items-right' to 'items-center' */}
 
@@ -45,11 +45,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* Bottom Border */}
-                <div className="border-t border-gray-700 mt-12 pt-8 text-center">
-                    <p className="text-gray-400">
-                        © 2025 GHG Emission Tracker. Together for sustainable poultry farming.
-                    </p>
-                </div>
+               
             </div>
         </footer>
     );
