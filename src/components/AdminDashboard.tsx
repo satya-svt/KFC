@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [selectedOrg, setSelectedOrg] = useState<string>('all')
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Feed')
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('Overall')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [orgSearchTerm, setOrgSearchTerm] = useState('');
   const [organizations, setOrganizations] = useState<string[]>([]);
