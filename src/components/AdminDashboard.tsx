@@ -444,6 +444,45 @@ export default function AdminDashboard() {
     }));
   }, [summaryStats]);
 
+  // Helper: build chart data for any single dashboard mode, reusing your existing logic
+const getChartDataFor = (mode: DashboardMode) => {
+  const categories = modeConfig[mode].categoryNames;
+
+  // filter the already org-filtered responses by this mode's categories
+  const filtered = orgFilteredResponses.filter(r => categories.includes(r.category || ''));
+
+  // sum emissions per response.name
+  const sums: Record<string, number> = {};
+  for (const r of filtered) {
+    let emission = 0;
+
+    if (mode === 'Overall') {
+      const feed = parseFloat(r.feed_emission?.toString() || '0');
+      const manure = parseFloat(r.manure_emission?.toString() || '0');
+      const energy = parseFloat(r.energy_emission?.toString() || '0');
+      const waste = parseFloat(r.waste_emission?.toString() || '0');
+      const transport = parseFloat(r.transport_emission?.toString() || '0');
+      emission = feed + manure + energy + waste + transport;
+    } else {
+      const key = modeConfig[mode].emissionKey;
+      const raw = r[key] as (string | number | null | undefined);
+      emission = raw !== undefined && raw !== null ? parseFloat(String(raw)) : 0;
+    }
+
+    const label = r.name || 'Unknown';
+    sums[label] = (sums[label] || 0) + (isNaN(emission) ? 0 : emission);
+  }
+
+  const total = Object.values(sums).reduce((a, b) => a + b, 0);
+
+  return Object.entries(sums).map(([name, value]) => ({
+    name,
+    value,
+    percentage: total > 0 ? Math.round((value / total) * 100) : 0
+  }));
+};
+
+
   const orgCounts = useMemo(() => {
     // Count complete form cycles per organization
     // A complete cycle means having at least one entry from each form category
@@ -674,6 +713,8 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
+
+
       <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg" >
           <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
@@ -699,6 +740,65 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
       </motion.div>
+
+      {dashboardMode === 'Overall' && (
+  <motion.div className="mt-12 flex flex-col gap-12">
+    {(['Feed', 'Manure', 'Energy', 'Waste', 'Transport'] as DashboardMode[]).map((mode) => {
+      const dataForMode = getChartDataFor(mode);
+      return (
+        <div key={mode} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Mode-specific Data Distribution */}
+          <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+            <h3 className="text-xl font-semibold mb-4">{mode} — Data Distribution</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dataForMode}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+                <XAxis
+                  dataKey="name"
+                  stroke="#9CA3AF"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
+                  labelStyle={{ color: '#D1D5DB' }}
+                />
+                <Bar dataKey="value" fill="#6B7280" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Mode-specific Data Share (Pie) */}
+          <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+            <h3 className="text-xl font-semibold mb-4">{mode} — Data Share (Pie)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={dataForMode}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percentage }) => `${name}: ${percentage}%`}
+                >
+                  {dataForMode.map((_, i) => (
+                    <Cell key={`cell-${mode}-${i}`} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    })}
+  </motion.div>
+)}
+
 
       <motion.div className="mt-10" >
         <div className="flex justify-between items-center mb-4">
