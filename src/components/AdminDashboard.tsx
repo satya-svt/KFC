@@ -15,11 +15,53 @@ import { useLocation } from 'react-router-dom';
 
 const COLORS = ['#6B7280', '#4B5563', '#9CA3AF', '#D1D5DB', '#374151', '#1F2937', '#F3F4F6']
 
+// Multicolor palette for pie segments (distinct hues)
+const PIE_COLORS = [
+  '#60A5FA', // blue
+  '#F59E0B', // amber
+  '#10B981', // emerald
+  '#EF4444', // red
+  '#A78BFA', // violet
+  '#06B6D4', // cyan
+  '#F43F5E', // rose
+  '#22C55E', // green
+  '#EAB308', // yellow
+  '#8B5CF6', // purple
+  '#14B8A6', // teal
+  '#F97316', // orange
+];
+
+
 type DashboardMode = 'Feed' | 'Manure' | 'Energy' | 'Waste' | 'Transport' | 'Overall';
 
 type LocationState = {
   fromAdmin?: boolean;
   fromCompare?: boolean;
+};
+
+// MODIFIED: Legend is now a regular block component for flex layout
+const PieLegend: React.FC<{
+  data: { name: string; value: number; percentage: number }[];
+}> = ({ data }) => {
+  if (!data || data.length === 0) return null;
+  return (
+    // The scrollable container is now the top-level element.
+    // Its height is limited to fit neatly next to the chart.
+    <div
+      className="flex flex-col gap-2 text-xs w-full"
+      style={{ maxHeight: '280px', overflowY: 'auto', paddingRight: '10px' }}
+    >
+      {data.map((d, i) => (
+        <div key={`${d.name}-${i}`} className="flex items-start gap-2">
+          <span
+            className="inline-block w-3 h-3 rounded-sm flex-shrink-0 mt-0.5"
+            style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+          />
+          <span className="text-gray-200">{d.name}</span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 
@@ -728,17 +770,47 @@ const getChartDataFor = (mode: DashboardMode) => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg" >
-          <h3 className="text-xl font-semibold mb-4">Data Share (Pie)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={chartData} cx="50%" cy="50%" labelLine={false} outerRadius={100} fill="#8884d8" dataKey="value" label={({ name, percentage }) => `${name}: ${percentage}%`} >
-                {chartData.map((_, i) => (<Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />))}
-              </Pie>
-              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+        <h3 className="text-xl font-semibold mb-4">Data Share (Pie)</h3>
+        <div className="flex flex-row items-center w-full" style={{ height: '300px' }}>
+          {/* Pie Chart Container (Left Side) */}
+          <div className="w-3/5 h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  labelLine={false}
+                  label={false}
+                >
+                  {chartData.map((_, i) => (
+                    <Cell key={`cell-${i}`} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
+                  itemStyle={{ color: '#D1D5DB' }}
+                  labelStyle={{ color: '#FFFFFF' }} 
+                  formatter={(val: any, _name: any, { payload }: any) => {
+                    const pct = payload?.percentage ?? 0;
+                    const label = payload?.name ?? '';
+                    return [`${pct}% (${val})`, label];
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Legend Container (Right Side) */}
+          <div className="w-2/5 h-full pl-4 flex items-center">
+            <PieLegend data={chartData} />
+          </div>
         </div>
+      </div>
+
       </motion.div>
 
       {dashboardMode === 'Overall' && (
@@ -771,28 +843,48 @@ const getChartDataFor = (mode: DashboardMode) => {
           </div>
 
           {/* Mode-specific Data Share (Pie) */}
-          <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+       {/* Mode-specific Data Share (Pie) */}
+       <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
             <h3 className="text-xl font-semibold mb-4">{mode} — Data Share (Pie)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={dataForMode}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percentage }) => `${name}: ${percentage}%`}
-                >
-                  {dataForMode.map((_, i) => (
-                    <Cell key={`cell-${mode}-${i}`} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="flex flex-row items-center w-full" style={{ height: '300px' }}>
+            {/* Pie Chart Container (Left Side) */}
+            <div className="w-3/5 h-full">
+                <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                    data={dataForMode}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    labelLine={false}
+                    label={false}
+                    >
+                    {dataForMode.map((_, i) => (
+                        <Cell key={`cell-${mode}-${i}`} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                    </Pie>
+                    <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
+                    itemStyle={{ color: '#D1D5DB' }}  
+                    labelStyle={{ color: '#FFFFFF' }} 
+                    formatter={(val: any, _name: any, { payload }: any) => {
+                        const pct = payload?.percentage ?? 0;
+                        const label = payload?.name ?? '';
+                        return [`${pct}% (${val})`, label];
+                    }}
+                    />
+                </PieChart>
+                </ResponsiveContainer>
+            </div>
+            {/* Legend Container (Right Side) */}
+            <div className="w-2/5 h-full pl-4 flex items-center">
+                <PieLegend data={dataForMode} />
+            </div>
+            </div>
+        </div>
+
         </div>
       );
     })}
