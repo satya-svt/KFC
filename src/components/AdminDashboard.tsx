@@ -64,6 +64,19 @@ const PieLegend: React.FC<{
   );
 };
 
+// Place this new component inside AdminDashboard.tsx, before the main component
+const CustomBarTooltip: React.FC<any> = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="p-3 bg-gray-800 border border-gray-600 rounded-lg shadow-xl">
+        <p className="text-sm font-bold text-white">{`${label}`}</p>
+        <p className="text-xs text-blue-300">{`Emission: ${payload[0].value.toLocaleString()}`}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -81,6 +94,7 @@ export default function AdminDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, org: string } | null>(null);
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
   const location = useLocation();
   const fromAdmin = (location.state as LocationState | null)?.fromAdmin;
@@ -478,15 +492,21 @@ export default function AdminDashboard() {
 
   const chartData = useMemo(() => {
     const totalEmissions = Object.values(summaryStats.responsesByCategory).reduce((sum, val) => sum + val, 0);
-
-    return Object.entries(summaryStats.responsesByCategory).map(([name, value]) => ({
+  
+    // 1. First, map your data into a new array and store it in a variable called 'data'.
+    const data = Object.entries(summaryStats.responsesByCategory).map(([name, value]) => ({
       name,
       value,
       percentage: totalEmissions > 0 ? Math.round((value / totalEmissions) * 100) : 0
     }));
+  
+    // 2. Now, sort that 'data' array and return the result.
+    return data.sort((a, b) => b.value - a.value);
+  
   }, [summaryStats]);
 
   // Helper: build chart data for any single dashboard mode, reusing your existing logic
+// Helper: build chart data for any single dashboard mode, reusing your existing logic
 const getChartDataFor = (mode: DashboardMode) => {
   const categories = modeConfig[mode].categoryNames;
 
@@ -498,30 +518,26 @@ const getChartDataFor = (mode: DashboardMode) => {
   for (const r of filtered) {
     let emission = 0;
 
-    if (mode === 'Overall') {
-      const feed = parseFloat(r.feed_emission?.toString() || '0');
-      const manure = parseFloat(r.manure_emission?.toString() || '0');
-      const energy = parseFloat(r.energy_emission?.toString() || '0');
-      const waste = parseFloat(r.waste_emission?.toString() || '0');
-      const transport = parseFloat(r.transport_emission?.toString() || '0');
-      emission = feed + manure + energy + waste + transport;
-    } else {
-      const key = modeConfig[mode].emissionKey;
-      const raw = r[key] as (string | number | null | undefined);
-      emission = raw !== undefined && raw !== null ? parseFloat(String(raw)) : 0;
-    }
-
+    // This logic correctly gets the emission value for the specific mode
+    const key = modeConfig[mode].emissionKey;
+    const raw = r[key] as (string | number | null | undefined);
+    emission = raw !== undefined && raw !== null ? parseFloat(String(raw)) : 0;
+    
     const label = r.name || 'Unknown';
     sums[label] = (sums[label] || 0) + (isNaN(emission) ? 0 : emission);
   }
 
   const total = Object.values(sums).reduce((a, b) => a + b, 0);
 
-  return Object.entries(sums).map(([name, value]) => ({
+  // 1. Create the data array
+  const data = Object.entries(sums).map(([name, value]) => ({
     name,
     value,
     percentage: total > 0 ? Math.round((value / total) * 100) : 0
   }));
+
+  // 2. Sort the data array and return it
+  return data.sort((a, b) => b.value - a.value);
 };
 
 
@@ -758,18 +774,63 @@ const getChartDataFor = (mode: DashboardMode) => {
 
 
       <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
-        <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg" >
-          <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-              <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={60} />
-              <YAxis stroke="#9CA3AF" />
-              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }} labelStyle={{ color: '#D1D5DB' }} />
-              <Bar dataKey="value" fill="#6B7280" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+       {/* Find this div in your code and replace it entirely with the block below */}
+<div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+  <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
+
+  {/* CHANGE 1: Added a wrapper div for horizontal scrolling */}
+  <div className="w-full overflow-x-auto pb-4">
+    <ResponsiveContainer 
+      width={chartData.length > 10 ? chartData.length * 60 : '100%'} // Dynamically set width
+      height={300}
+    >
+      <BarChart 
+        data={chartData}
+        // CHANGE 2: Added mouse events to track hovered bar for highlighting
+        onMouseMove={(state) => {
+          if (state.isTooltipActive) {
+            setHoveredBar(state.activePayload?.[0]?.payload.name || null);
+          }
+        }}
+        onMouseLeave={() => setHoveredBar(null)}
+        margin={{ top: 20, right: 20, left: -10, bottom: 5 }} // Adjust margin for labels
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+        
+        {/* CHANGE 3: Set scale="band" to place bars between grid lines */}
+        <XAxis 
+          dataKey="name" 
+          stroke="#9CA3AF" 
+          angle={-45} 
+          textAnchor="end" 
+          height={70} // Increased height for better label visibility
+          interval={0} // Ensure all labels are shown
+          scale="band" // This is the key to placing bars between lines
+        />
+        
+        <YAxis stroke="#9CA3AF" />
+        
+        {/* CHANGE 4: Use our new CustomBarTooltip */}
+        <Tooltip 
+          cursor={{ fill: 'rgba(75, 85, 99, 0.3)' }} // This dims the background block on hover
+          content={<CustomBarTooltip />} 
+          animationDuration={200}
+        />
+        
+        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          {/* CHANGE 5: Render each bar as a Cell for individual styling (opacity) */}
+          {chartData.map((entry, index) => (
+            <Cell 
+              key={`cell-${index}`} 
+              fill={hoveredBar === null || hoveredBar === entry.name ? '#60A5FA' : '#4B5563'} // Highlight active bar
+              style={{ transition: 'fill 0.2s' }} // Smooth transition for color change
+            />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
         <h3 className="text-xl font-semibold mb-4">Data Share (Pie)</h3>
         <div className="flex flex-row items-center w-full" style={{ height: '300px' }}>
@@ -817,6 +878,7 @@ const getChartDataFor = (mode: DashboardMode) => {
   <motion.div className="mt-12 flex flex-col gap-12">
     {(['Feed', 'Manure', 'Energy', 'Waste', 'Transport'] as DashboardMode[]).map((mode) => {
       const dataForMode = getChartDataFor(mode);
+      console.log("Data for Mode:", dataForMode);
       return (
         <div key={mode} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Mode-specific Data Distribution */}
