@@ -881,28 +881,59 @@ const getChartDataFor = (mode: DashboardMode) => {
       console.log("Data for Mode:", dataForMode);
       return (
         <div key={mode} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Mode-specific Data Distribution */}
-          <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
-            <h3 className="text-xl font-semibold mb-4">{mode} — Data Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dataForMode}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#9CA3AF"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #4B5563' }}
-                  labelStyle={{ color: '#D1D5DB' }}
-                />
-                <Bar dataKey="value" fill="#6B7280" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        {/* Mode-specific Data Distribution - REPLACEMENT BLOCK */}
+<div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
+  <h3 className="text-xl font-semibold mb-4">{mode} — Data Distribution</h3>
+  {/* Added a wrapper div for horizontal scrolling */}
+  <div className="w-full overflow-x-auto pb-2">
+    <ResponsiveContainer 
+      width={dataForMode.length > 10 ? dataForMode.length * 60 : '100%'}
+      height={300}
+    >
+      <BarChart 
+        data={dataForMode}
+        onMouseMove={(state) => {
+          if (state.activePayload && state.activePayload.length > 0) {
+            setHoveredBar(state.activePayload[0].payload.name);
+          }
+        }}
+        onMouseLeave={() => setHoveredBar(null)}
+        margin={{ top: 20, right: 20, left: -10, bottom: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+        
+        {/* Cleaned X-Axis */}
+        <XAxis 
+          dataKey="name" 
+          scale="band"
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={() => ''}
+          height={10}
+        />
+        
+        <YAxis stroke="#9CA3AF" />
+        
+        {/* Custom Tooltip and Hover Effect */}
+        <Tooltip 
+          cursor={{ fill: 'rgba(75, 85, 99, 0.3)' }}
+          content={<CustomBarTooltip />} 
+          isAnimationActive={false}
+        />
+        
+        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          {dataForMode.map((entry, index) => (
+            <Cell 
+              key={`cell-${mode}-${index}`} 
+              fill={hoveredBar === null || hoveredBar === entry.name ? '#60A5FA' : '#4B5563'}
+              style={{ transition: 'fill 0.2s' }}
+            />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
           {/* Mode-specific Data Share (Pie) */}
        {/* Mode-specific Data Share (Pie) */}
