@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes glow {
+    /* The animation starts and ends with a subtle shadow */
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+    
+    /* At the halfway point, the shadow is larger and brighter, creating the "glow" */
+    50% {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+  }
