@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../lib/supabase';
+import { supabase, getUserProfile } from '../lib/supabase';
 import {
   Mail,
   Lock,
@@ -84,7 +84,8 @@ export default function AuthPage() {
           supabase.auth.signOut();
           localStorage.removeItem('loginTimestamp');
         } else {
-          navigate('/auth');
+          // ✅ FIX: Navigate to the new EntryOptions page
+          navigate('/entry-options');
         }
       }
     };
@@ -94,7 +95,8 @@ export default function AuthPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         localStorage.setItem('loginTimestamp', Date.now().toString());
-        navigate('/general');
+        // ✅ FIX: Navigate to the new EntryOptions page
+        navigate('/entry-options');
       }
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem('loginTimestamp');
@@ -104,7 +106,6 @@ export default function AuthPage() {
     return () => subscription.unsubscribe();
   }, [navigate, location.search]);
 
-  // --- CHANGE START: The handleAuth function is updated with new, secure logic for 'forgot' mode ---
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -141,6 +142,7 @@ export default function AuthPage() {
         setMessageType('success');
 
       } else if (authMode === 'login') {
+        // ✅ Reverted to original logic
         if (!formData.organizationName || !formData.password) {
           throw new Error('Please select an organization and enter your password.');
         }
@@ -159,16 +161,13 @@ export default function AuthPage() {
         });
         if (signInError) throw signInError;
 
-        localStorage.setItem('loginTimestamp', Date.now().toString());
-        navigate('/general');
-
+        // ✅ FIX: No redirect here, handled by onAuthStateChange listener
       } else if (authMode === 'forgot') {
-        // 1. Check if an organization is selected
+        // ✅ Reverted to original logic
         if (!formData.organizationName) {
           throw new Error('Please select your organization to reset the password.');
         }
 
-        // 2. Find the email associated with that organization
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('email')
@@ -179,7 +178,6 @@ export default function AuthPage() {
           throw new Error('Organization not found.');
         }
 
-        // 3. Send the reset email to the correct, associated email address
         const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
           redirectTo: `${window.location.origin}/reset-password`
         });
@@ -206,7 +204,6 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
-  // --- CHANGE END ---
 
   const handleLogoClick = () => {
     setClickCount(prev => prev + 1);
@@ -254,9 +251,7 @@ export default function AuthPage() {
             className="text-gray-600 text-lg font-medium mt-2">
             {authMode === 'login' && 'Sign in to submit your data'}
             {authMode === 'signup' && 'Join our data platform'}
-            {/* --- CHANGE START: Updated instruction text for forgot mode --- */}
             {authMode === 'forgot' && 'Select your organization to reset your password'}
-            {/* --- CHANGE END --- */}
           </motion.p>
         </div>
 
@@ -402,7 +397,6 @@ export default function AuthPage() {
             </>
           )}
 
-          {/* --- CHANGE START: The UI for 'forgot' mode is now updated to only show the organization dropdown --- */}
           {authMode === 'forgot' && (
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -418,7 +412,6 @@ export default function AuthPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
             </div>
           )}
-          {/* --- CHANGE END --- */}
 
           <button
             type="submit"
@@ -438,7 +431,6 @@ export default function AuthPage() {
         <div className="mt-6 text-center text-sm text-gray-500 space-y-1">
           {authMode === 'login' && (
             <>
-              {/* --- CHANGE START: The "Forgot Password?" button is now disabled if no organization is selected --- */}
               <button
                 onClick={() => setAuthMode('forgot')}
                 className="hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
@@ -446,7 +438,6 @@ export default function AuthPage() {
               >
                 Forgot Password?
               </button>
-              {/* --- CHANGE END --- */}
               <div>
                 Don't have an account?{' '}
                 <button onClick={() => setAuthMode('signup')} className="text-gray-800 font-semibold hover:underline">

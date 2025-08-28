@@ -18,6 +18,7 @@ import ReviewDownload from './components/ReviewDownload';
 import GeneralForm from './components/GeneralForm'
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ComparisonPage from './components/ComparisonPage';
+import EntryOptions from './components/EntryOptions';
 
 // This new layout component will wrap all protected pages to give them the Navbar
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
@@ -47,6 +48,7 @@ function App() {
       <Route path="/compare" element={<ComparisonPage />} />
       {/* --- Protected Routes with Navbar --- */}
       {/* These routes are for logged-in users and will have the main Navbar. */}
+      <Route path="/entry-options" element={<ProtectedRoute><EntryOptions /></ProtectedRoute>} />
       <Route path="/form" element={<ProtectedLayout><UserForm /></ProtectedLayout>} />
       <Route path="/manure" element={<ProtectedLayout><ManureManagement /></ProtectedLayout>} />
       <Route path="/energy" element={<ProtectedLayout><EnergyProcessing /></ProtectedLayout>} />

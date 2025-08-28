@@ -12,7 +12,6 @@ export interface AutoSaveData {
   updated_at?: string
 }
 
-// Save form data to Supabase with debouncing and entry isolation
 let saveTimeout: NodeJS.Timeout | null = null
 
 export const autoSaveFormData = async (page: string, formData: any, entryId: string = 'entry_1'): Promise<void> => {
@@ -20,13 +19,11 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
     clearTimeout(saveTimeout)
   }
 
-  // Debounce the save operation by 1 second
   saveTimeout = setTimeout(async () => {
     try {
       const userEmail = await getCurrentUserEmail()
       if (!userEmail) return
 
-      // FIX: Add 'await' to correctly get the user profile
       const userProfile = await getUserProfile()
 
       const autoSaveData: AutoSaveData = {
@@ -53,7 +50,6 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
       }
 
       if (existing) {
-        // Update existing row
         const { error: updateError } = await supabase
           .from('data_rows')
           .update({
@@ -68,7 +64,6 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
           console.error('Error updating auto-save:', updateError)
         }
       } else {
-        // Insert new row
         const { error: insertError } = await supabase
           .from('data_rows')
           .insert({
@@ -94,7 +89,6 @@ export const autoSaveFormData = async (page: string, formData: any, entryId: str
   }, 1000)
 }
 
-// Load saved form data from Supabase for specific entry
 export const loadAutoSavedData = async (page: string, entryId: string = 'entry_1'): Promise<any | null> => {
   try {
     const userEmail = await getCurrentUserEmail()
@@ -126,7 +120,6 @@ export const loadAutoSavedData = async (page: string, entryId: string = 'entry_1
   }
 }
 
-// Clear auto-saved data after successful submission for specific entry
 export const clearAutoSavedData = async (page: string, entryId: string = 'entry_1'): Promise<void> => {
   try {
     const userEmail = await getCurrentUserEmail()
@@ -148,7 +141,28 @@ export const clearAutoSavedData = async (page: string, entryId: string = 'entry_
   }
 }
 
-// Get all auto-saved pages for a user and specific entry
+// ✅ NEW: Clears all auto-saved data for a user across all pages
+export const clearAllAutoSavedData = async (entryId: string = 'entry_1'): Promise<void> => {
+  try {
+    const userEmail = await getCurrentUserEmail()
+    if (!userEmail) return
+
+    const { error } = await supabase
+      .from('data_rows')
+      .delete()
+      .eq('user_email', userEmail)
+      .eq('category', 'autosave')
+      .contains('tags', [entryId])
+
+    if (error) {
+      console.error('Error clearing all auto-saved data:', error)
+    }
+  } catch (error) {
+    console.error('Error clearing all auto-saved data:', error)
+  }
+}
+
+
 export const getAutoSavedPages = async (entryId: string = 'entry_1'): Promise<string[]> => {
   try {
     const userEmail = await getCurrentUserEmail()
@@ -173,7 +187,7 @@ export const getAutoSavedPages = async (entryId: string = 'entry_1'): Promise<st
   }
 }
 
-// Get all auto-saved data for all pages for a specific entry
+
 export const getAllAutoSavedData = async (entryId: string = 'entry_1'): Promise<Record<string, any>> => {
   try {
     const userEmail = await getCurrentUserEmail()
@@ -206,9 +220,8 @@ export const getAllAutoSavedData = async (entryId: string = 'entry_1'): Promise<
   }
 }
 
-// Save form data immediately (for navigation events)
+
 export const saveFormDataImmediately = async (page: string, formData: any, entryId: string = 'entry_1'): Promise<void> => {
-  // Clear any pending timeout
   if (saveTimeout) {
     clearTimeout(saveTimeout)
     saveTimeout = null
@@ -229,7 +242,6 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
       form_data: formData
     }
 
-    // Use .contains for tags
     const { data: existing, error: fetchError } = await supabase
       .from('data_rows')
       .select('id')
@@ -245,7 +257,6 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
     }
 
     if (existing) {
-      // Update existing row
       const { error: updateError } = await supabase
         .from('data_rows')
         .update({
@@ -260,7 +271,6 @@ export const saveFormDataImmediately = async (page: string, formData: any, entry
         console.error('Error updating auto-save:', updateError)
       }
     } else {
-      // Insert new row
       const { error: insertError } = await supabase
         .from('data_rows')
         .insert({

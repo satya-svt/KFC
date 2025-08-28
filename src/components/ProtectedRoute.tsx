@@ -1,46 +1,50 @@
-import React, { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
-import AuthPage from './AuthPage'
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import AuthPage from './AuthPage';
+import { useNavigate } from 'react-router-dom'; // ✅ NEW: Import useNavigate
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate(); // ✅ NEW: Initialize useNavigate
 
   const checkAuth = async () => {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
+      const { data: { session }, error } = await supabase.auth.getSession();
+
       if (error) {
-        console.error('Auth error:', error)
-        setIsAuthenticated(false)
+        console.error('Auth error:', error);
+        setIsAuthenticated(false);
       } else {
-        setIsAuthenticated(!!session)
+        setIsAuthenticated(!!session);
       }
     } catch (error) {
-      console.error('Failed to check authentication:', error)
-      setIsAuthenticated(false)
+      console.error('Failed to check authentication:', error);
+      setIsAuthenticated(false);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    checkAuth()
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setIsAuthenticated(!!session)
-        setIsLoading(false)
-        // Removed profile redirection logic since no profile page exists
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+        if (event === 'SIGNED_IN' && session) {
+          navigate('/entry-options'); // ✅ FIX: Redirect to the new options page
+        }
       }
-    )
+    );
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, [navigate]); // ✅ FIX: Add navigate to dependency array
 
   if (isLoading) {
     return (
@@ -50,14 +54,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return <AuthPage />
+    return <AuthPage />;
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default ProtectedRoute
+export default ProtectedRoute;
