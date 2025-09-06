@@ -95,11 +95,9 @@ type LocationState = {
   fromCompare?: boolean;
 };
 
-// ✅ FIX: This new component encapsulates the chart and its local hover state.
 const DashboardBarChart: React.FC<{ data: any[]; mode?: string }> = ({ data, mode }) => {
   const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
-  // Set the key to be unique for each instance, preventing state from being shared
   const uniqueKey = mode || 'overall';
 
   return (
@@ -151,9 +149,6 @@ export default function AdminDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; org: string } | null>(null);
-
-  // ✅ FIX: Removed the global hoveredBar state, it is now local to each chart
-  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
   const location = useLocation();
   const fromAdmin = (location.state as LocationState | null)?.fromAdmin;
@@ -314,6 +309,24 @@ export default function AdminDashboard() {
         const error = err as Error;
         console.error('Error deleting organization:', error);
         alert(`Error deleting organization: ${error.message || error}`);
+      }
+    }
+  };
+
+  // ✅ NEW: Function to handle deleting a specific entry from the database
+  const handleDeleteEntry = async (entryId: string) => {
+    if (window.confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
+      try {
+        const { error } = await supabase.from('data_rows').delete().eq('id', entryId);
+        if (error) {
+          alert(`Error deleting entry: ${error.message}`);
+        } else {
+          fetchResponses(); // Refresh the data to update the table
+          alert('Entry deleted successfully.');
+        }
+      } catch (err) {
+        const error = err as Error;
+        alert(`Error deleting entry: ${error.message || error}`);
       }
     }
   };
@@ -750,6 +763,15 @@ export default function AdminDashboard() {
               >
                 <PlusCircle size={16} /> Add
               </button>
+              {/* ✅ NEW: Conditionally render the delete button */}
+              {selectedOrg !== 'all' && (
+                <button
+                  onClick={() => handleDeleteOrganization(selectedOrg)}
+                  className="flex items-center gap-2 text-sm bg-red-600/50 hover:bg-red-600/80 px-3 py-1.5 rounded-lg"
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
+              )}
               <button
                 onClick={() => navigate('/compare', { state: { fromAdmin: true } })}
                 className="flex items-center gap-2 text-sm bg-gray-600/50 hover:bg-gray-600/80 px-3 py-1.5 rounded-lg"
@@ -843,7 +865,6 @@ export default function AdminDashboard() {
       <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
-          {/* ✅ FIX: Replaced the old chart with the new, isolated DashboardBarChart component */}
           <DashboardBarChart data={chartData} mode="overall" />
         </div>
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
@@ -895,7 +916,6 @@ export default function AdminDashboard() {
               <div key={mode} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
                   <h3 className="text-xl font-semibold mb-4">{mode} — Data Distribution</h3>
-                  {/* ✅ FIX: Replaced the old chart with the new, isolated DashboardBarChart component */}
                   <DashboardBarChart data={dataForMode} mode={mode} />
                 </div>
                 <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
@@ -965,6 +985,7 @@ export default function AdminDashboard() {
                   <th className="px-6 py-3">Emission Value (in tons)</th>
                   <th className="px-6 py-3">Organization</th>
                   <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Action</th> {/* ✅ NEW: Added a new column header */}
                 </tr>
               </thead>
               <tbody>
@@ -1014,6 +1035,18 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 text-gray-300">
                         {r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : 'N/A'}
+                      </td>
+                      {/* ✅ NEW: Added a new table cell with a delete button for individual entries */}
+                      <td className="px-6 py-4 text-center">
+                        <motion.button
+                          onClick={() => handleDeleteEntry(r.id)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded-lg"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Delete Entry"
+                        >
+                          <Trash2 size={16} />
+                        </motion.button>
                       </td>
                     </tr>
                   );
