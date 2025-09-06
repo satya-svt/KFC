@@ -313,7 +313,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ NEW: Function to handle deleting a specific entry from the database
+  //Function to handle deleting a specific entry from the database
   const handleDeleteEntry = async (entryId: string) => {
     if (window.confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
       try {
@@ -763,7 +763,7 @@ export default function AdminDashboard() {
               >
                 <PlusCircle size={16} /> Add
               </button>
-              {/* ✅ NEW: Conditionally render the delete button */}
+              {/*Conditionally render the delete button */}
               {selectedOrg !== 'all' && (
                 <button
                   onClick={() => handleDeleteOrganization(selectedOrg)}
@@ -985,7 +985,7 @@ export default function AdminDashboard() {
                   <th className="px-6 py-3">Emission Value (in tons)</th>
                   <th className="px-6 py-3">Organization</th>
                   <th className="px-6 py-3">Date</th>
-                  <th className="px-6 py-3">Action</th> {/* ✅ NEW: Added a new column header */}
+                  <th className="px-6 py-3">Action</th> {/*Added a new column header */}
                 </tr>
               </thead>
               <tbody>

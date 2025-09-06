@@ -67,32 +67,77 @@ function getFlattenedResponses(allData: Record<string, any>) {
   return result
 }
 
-function downloadAsPDFFromData(allData: Record<string, any>) {
-  const doc = new jsPDF()
-  const responseRows = getFlattenedResponses(allData)
-  if (responseRows.length === 0) {
-    alert("No data to download.")
-    return
-  }
-  doc.setFontSize(20)
-  doc.text('Submission Export', 14, 22)
-  doc.setFontSize(12)
-  doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 35)
-  doc.text(`Total Entries: ${responseRows.length}`, 14, 45)
-  const columns = Object.keys(responseRows[0])
-  const tableData = responseRows.map(row => columns.map(col => row[col] ?? ""))
-  autoTable(doc, {
-    head: [columns],
-    body: tableData,
-    startY: 55,
-    margin: { left: 14, right: 14 },
-    styles: { fontSize: 8, cellPadding: 3 },
-    headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontSize: 9 },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-    columnStyles: { 0: { cellWidth: 20 }, 1: { cellWidth: 15 } }
-  })
-  doc.save('submission.pdf')
-}
+// ✅ FIX: This new function correctly implements the custom PDF generation
+const downloadAsPDF = (sections: any[], totals: { feed: number, transport: number }, userInfo: any) => {
+  const doc = new jsPDF();
+  const margin = 15;
+  let y = margin;
+
+  // Title and header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.text('Submission Review', margin, y);
+  y += 10;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, y);
+  y += 5;
+  doc.text(`Organization: ${userInfo.profile?.organization_name || 'N/A'}`, margin, y);
+  y += 15;
+
+  sections.forEach((section, sectionIndex) => {
+    if (section.data.length === 0) return;
+
+    // Add new page if necessary
+    if (y > 250) { // a reasonable threshold
+      doc.addPage();
+      y = margin;
+    }
+
+    // Section title
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(section.title, margin, y);
+    y += 10;
+
+    // Table headers
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const headers = [section.headers];
+    const body = section.data.map((row: any) => Object.values(row).map(String));
+
+    autoTable(doc, {
+      startY: y,
+      head: headers,
+      body: body,
+      margin: { left: margin, right: margin },
+      styles: { cellPadding: 2, fontSize: 10, valign: 'middle' },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', minCellHeight: 10 },
+      bodyStyles: { minCellHeight: 10 },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      didDrawPage: (data) => {
+        y = data.cursor.y + 10;
+      }
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 5; // Update y position after table
+
+    // Add custom totals row
+    if (section.key === 'feed') {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Total', margin, y);
+      doc.text(`${totals.feed.toFixed(2)} KGs`, doc.internal.pageSize.getWidth() - margin - 30, y);
+      y += 10;
+    } else if (section.key === 'transport') {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Total Distance', margin, y);
+      doc.text(`${totals.transport.toFixed(2)} KMs`, doc.internal.pageSize.getWidth() - margin - 30, y);
+      y += 10;
+    }
+  });
+
+  doc.save('Submission_Report.pdf');
+};
 
 function downloadAsCSVFromData(allData: Record<string, any>) {
   const responseRows = getFlattenedResponses(allData)
@@ -201,12 +246,14 @@ export default function ReviewDownload() {
     }, 0);
   }, [allData.transport]);
 
+  // ✅ FIX: Replaced handleDownload with a new, simplified function that calls the custom PDF function
   const handleDownload = async (format: 'pdf' | 'csv' | 'xlsx') => {
     setDownloading(format)
     try {
       switch (format) {
         case 'pdf':
-          downloadAsPDFFromData(allData)
+          const totals = { feed: totalFeedInKgs, transport: totalTransportInKms };
+          downloadAsPDF(completedSections, totals, userInfo);
           break
         case 'csv':
           downloadAsCSVFromData(allData)
