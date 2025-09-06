@@ -95,6 +95,46 @@ type LocationState = {
   fromCompare?: boolean;
 };
 
+// ✅ FIX: This new component encapsulates the chart and its local hover state.
+const DashboardBarChart: React.FC<{ data: any[]; mode?: string }> = ({ data, mode }) => {
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
+
+  // Set the key to be unique for each instance, preventing state from being shared
+  const uniqueKey = mode || 'overall';
+
+  return (
+    <div className="w-full overflow-x-auto pb-4">
+      <ResponsiveContainer width={data.length > 10 ? data.length * 60 : '100%'} height={300}>
+        <BarChart
+          data={data}
+          onMouseMove={(state) => {
+            if (state.isTooltipActive) {
+              setHoveredBar(state.activePayload?.[0]?.payload.name || null);
+            }
+          }}
+          onMouseLeave={() => setHoveredBar(null)}
+          margin={{ top: 20, right: 20, left: -10, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
+          <XAxis dataKey="name" stroke="#9CA3AF" angle={-45} textAnchor="end" height={70} interval={0} scale="band" />
+          <YAxis stroke="#9CA3AF" />
+          <Tooltip cursor={{ fill: 'rgba(75, 85, 99, 0.3)' }} content={<CustomBarTooltip />} animationDuration={200} />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${uniqueKey}-${index}`}
+                fill={hoveredBar === null || hoveredBar === entry.name ? '#60A5FA' : '#4B5563'}
+                style={{ transition: 'fill 0.2s' }}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [responses, setResponses] = useState<ResponseData[]>([]);
@@ -111,6 +151,8 @@ export default function AdminDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; org: string } | null>(null);
+
+  // ✅ FIX: Removed the global hoveredBar state, it is now local to each chart
   const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
   const location = useLocation();
@@ -557,8 +599,6 @@ export default function AdminDashboard() {
     );
   }, [responses]);
 
-  // ✅ FIX: Function to process and group raw energy data, correcting the Date creation and undefined object bugs
-  // ✅ FIX: Function to process and group raw energy data, correcting the Date creation and undefined object bugs
   const processedRawData = useMemo(() => {
     if (dashboardMode !== 'Energy' || !modeFilteredResponses || modeFilteredResponses.length === 0) {
       return modeFilteredResponses;
@@ -577,10 +617,8 @@ export default function AdminDashboard() {
         };
       }
 
-      // ✅ NEW FIX: Explicitly check and handle the case where energy_emission might be undefined
       const currentEmission = parseFloat(current.energy_emission?.toString() || '0');
 
-      // Ensure the accumulator value is a number before adding to it
       if (acc[key].energy_emission === undefined) {
         acc[key].energy_emission = 0;
       }
@@ -805,49 +843,8 @@ export default function AdminDashboard() {
       <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <h3 className="text-xl font-semibold mb-4">Data Distribution</h3>
-          <div className="w-full overflow-x-auto pb-4">
-            <ResponsiveContainer
-              width={chartData.length > 10 ? chartData.length * 60 : '100%'}
-              height={300}
-            >
-              <BarChart
-                data={chartData}
-                onMouseMove={state => {
-                  if (state.isTooltipActive) {
-                    setHoveredBar(state.activePayload?.[0]?.payload.name || null);
-                  }
-                }}
-                onMouseLeave={() => setHoveredBar(null)}
-                margin={{ top: 20, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#9CA3AF"
-                  angle={-45}
-                  textAnchor="end"
-                  height={70}
-                  interval={0}
-                  scale="band"
-                />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip
-                  cursor={{ fill: 'rgba(75, 85, 99, 0.3)' }}
-                  content={<CustomBarTooltip />}
-                  animationDuration={200}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={hoveredBar === null || hoveredBar === entry.name ? '#60A5FA' : '#4B5563'}
-                      style={{ transition: 'fill 0.2s' }}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* ✅ FIX: Replaced the old chart with the new, isolated DashboardBarChart component */}
+          <DashboardBarChart data={chartData} mode="overall" />
         </div>
         <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
           <h3 className="text-xl font-semibold mb-4">Data Share (Pie)</h3>
@@ -898,48 +895,8 @@ export default function AdminDashboard() {
               <div key={mode} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
                   <h3 className="text-xl font-semibold mb-4">{mode} — Data Distribution</h3>
-                  <div className="w-full overflow-x-auto pb-2">
-                    <ResponsiveContainer
-                      width={dataForMode.length > 10 ? dataForMode.length * 60 : '100%'}
-                      height={300}
-                    >
-                      <BarChart
-                        data={dataForMode}
-                        onMouseMove={state => {
-                          if (state.activePayload && state.activePayload.length > 0) {
-                            setHoveredBar(state.activePayload[0].payload.name);
-                          }
-                        }}
-                        onMouseLeave={() => setHoveredBar(null)}
-                        margin={{ top: 20, right: 20, left: -10, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
-                        <XAxis
-                          dataKey="name"
-                          scale="band"
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={() => ''}
-                          height={10}
-                        />
-                        <YAxis stroke="#9CA3AF" />
-                        <Tooltip
-                          cursor={{ fill: 'rgba(75, 85, 99, 0.3)' }}
-                          content={<CustomBarTooltip />}
-                          isAnimationActive={false}
-                        />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                          {dataForMode.map((entry, index) => (
-                            <Cell
-                              key={`cell-${mode}-${index}`}
-                              fill={hoveredBar === null || hoveredBar === entry.name ? '#60A5FA' : '#4B5563'}
-                              style={{ transition: 'fill 0.2s' }}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {/* ✅ FIX: Replaced the old chart with the new, isolated DashboardBarChart component */}
+                  <DashboardBarChart data={dataForMode} mode={mode} />
                 </div>
                 <div className="bg-white/10 p-6 rounded-lg border border-white/20 backdrop-blur-lg">
                   <h3 className="text-xl font-semibold mb-4">{mode} — Data Share (Pie)</h3>
