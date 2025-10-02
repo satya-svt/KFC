@@ -120,7 +120,7 @@ const downloadAsPDF = (sections: any[], totals: { feed: number, transport: numbe
       }
     });
 
-    y = (doc as any).lastAutoTable.finalY + 5; // Update y position after table
+    y = (doc as any).lastAutoTable.finalY + 5;
 
     // Add custom totals row
     if (section.key === 'feed') {
