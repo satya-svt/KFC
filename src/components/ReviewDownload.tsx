@@ -67,7 +67,7 @@ function getFlattenedResponses(allData: Record<string, any>) {
   return result
 }
 
-// ✅ FIX: This new function correctly implements the custom PDF generation
+//This new function correctly implements the custom PDF generation
 const downloadAsPDF = (sections: any[], totals: { feed: number, transport: number }, userInfo: any) => {
   const doc = new jsPDF();
   const margin = 15;
