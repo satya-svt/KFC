@@ -21,4 +21,10 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?.env
+*.sw?
+
+# Environment variables
+.env
+
+# Supabase local metadata
+supabase/.temp/

@@ -267,9 +267,21 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!newOrgName.trim()) return;
 
-    const { error } = await supabase.from('organizations').insert({ name: newOrgName.trim() });
+    const trimmedName = newOrgName.trim();
+
+    // Check if organization already exists
+    if (organizations.some(org => org.toLowerCase() === trimmedName.toLowerCase())) {
+      alert(`Organization "${trimmedName}" already exists.`);
+      return;
+    }
+
+    const { error } = await supabaseAdmin.from('organizations').insert({ name: trimmedName });
     if (error) {
-      alert(`Error adding organization: ${error.message}`);
+      if (error.message.includes('duplicate')) {
+        alert(`Organization "${trimmedName}" already exists.`);
+      } else {
+        alert(`Error adding organization: ${error.message}`);
+      }
     } else {
       setNewOrgName('');
       setIsAddModalOpen(false);
@@ -297,7 +309,7 @@ export default function AdminDashboard() {
           }
         }
 
-        const { error } = await supabase.rpc('delete_organization', { org_name: orgName });
+        const { error } = await supabaseAdmin.rpc('delete_organization', { org_name: orgName });
         if (error) {
           alert(`Error deleting organization: ${error.message}`);
         } else {
@@ -317,7 +329,7 @@ export default function AdminDashboard() {
   const handleDeleteEntry = async (entryId: string) => {
     if (window.confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
       try {
-        const { error } = await supabase.from('data_rows').delete().eq('id', entryId);
+        const { error } = await supabaseAdmin.from('data_rows').delete().eq('id', entryId);
         if (error) {
           alert(`Error deleting entry: ${error.message}`);
         } else {
@@ -788,7 +800,7 @@ export default function AdminDashboard() {
                 : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
             >
-              All Organizations ({responses.length})
+              All Organizations ({organizations.length})
             </button>
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -800,7 +812,7 @@ export default function AdminDashboard() {
                 <option value="all">All Organizations</option>
                 {organizations.map(org => (
                   <option key={org} value={org}>
-                    {org} ({orgCounts[org] || 0})
+                    {org}
                   </option>
                 ))}
               </select>
