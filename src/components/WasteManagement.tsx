@@ -36,10 +36,10 @@ export default function WasteManagement() {
   const location = useLocation()
   const [wasteRows, setWasteRows] = useState<WasteData[]>([
     {
-      wasteWaterTreated: '1,00,00,000',
-      oxygenDemand: '250',
-      etp: 'Chemical',
-      waterTreatmentType: 'None - stagnant sewer'
+      wasteWaterTreated: '',
+      oxygenDemand: '',
+      etp: '',
+      waterTreatmentType: ''
     }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -115,8 +115,8 @@ export default function WasteManagement() {
       {
         wasteWaterTreated: '',
         oxygenDemand: '',
-        etp: etpOptions[0],
-        waterTreatmentType: waterTreatmentOptions[0]
+        etp: '',
+        waterTreatmentType: ''
       }
     ])
   }
@@ -359,6 +359,7 @@ export default function WasteManagement() {
                               onChange={(e) => updateWasteRow(rowIndex, 'etp', e.target.value)}
                               className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all appearance-none cursor-pointer"
                             >
+                              <option value="" disabled>Select ETP type</option>
                               {etpOptions.map(option => (
                                 <option key={option} value={option} className="text-gray-800">
                                   {option}
@@ -380,6 +381,7 @@ export default function WasteManagement() {
                               onChange={(e) => updateWasteRow(rowIndex, 'waterTreatmentType', e.target.value)}
                               className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all appearance-none cursor-pointer"
                             >
+                              <option value="" disabled>Select treatment type</option>
                               {waterTreatmentOptions.map(option => (
                                 <option key={option} value={option} className="text-gray-800">
                                   {option}
