@@ -11,6 +11,7 @@ import {
   Eye,
   ChevronDown,
   ArrowLeft,
+  ArrowRight,
   Wheat,
   Recycle,
   Zap,
@@ -294,6 +295,17 @@ export default function ReviewDownload() {
 
   const completedSections = sections.filter(section => section.data.length > 0);
 
+  const routeMap: Record<string, string> = {
+    general: '/general',
+    feed: '/form',
+    manure: '/manure',
+    energy: '/energy',
+    waste: '/waste',
+    transport: '/transport'
+  };
+  const nextIncompleteSection = sections.find(section => section.data.length === 0);
+  const resumeRoute = nextIncompleteSection ? routeMap[nextIncompleteSection.key] : null;
+
   if (loading) {
     return (
       <motion.div className="min-h-screen bg-gray-200 flex items-center justify-center"
@@ -383,6 +395,17 @@ export default function ReviewDownload() {
             </motion.div>
 
             <div className="space-y-4">
+              {resumeRoute && (
+                <motion.button
+                  onClick={() => navigate(resumeRoute)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ArrowRight className="w-5 h-5" />
+                  <span>Resume ({nextIncompleteSection?.title})</span>
+                </motion.button>
+              )}
               <motion.button
                 onClick={() => setShowReview(true)}
                 className="w-full bg-black/100 hover:bg-black/100 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2"
